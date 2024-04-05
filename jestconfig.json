@@ -1,0 +1,17 @@
+{
+    "transform": {
+        "^.+\\.(t|j)sx?$": "ts-jest"
+    },
+    "testRegex": "/src/.*\\.test\\.ts$",
+    "collectCoverageFrom": [
+        "src/**/*.{ts,js}"
+    ],
+    "coverageThreshold": {
+        "global": {
+            "branches": 45,
+            "functions": 70,
+            "lines": 70,
+            "statements": 70
+        }
+    }
+}

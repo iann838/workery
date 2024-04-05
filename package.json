@@ -1,5 +1,5 @@
 {
-    "name": "volan",
+    "name": "apertum",
     "version": "1.0.0-alpha.0",
     "description": "A modern, OpenAPI-based, and fully typed web framework.",
     "main": "./dist/index.js",
@@ -51,13 +51,13 @@
     ],
     "author": "iann838dev@gmail.com",
     "license": "MIT",
-    "homepage": "https://github.com/iann838/volan",
+    "homepage": "https://github.com/iann838/apertum",
     "repository": {
         "type": "git",
-        "url": "git@github.com:iann838/volan.git"
+        "url": "git@github.com:iann838/apertum.git"
     },
     "bugs": {
-        "url": "https://github.com/iann838/volan/issues"
+        "url": "https://github.com/iann838/apertum/issues"
     },
     "devDependencies": {
         "@commitlint/cli": "^13.1.0",
