@@ -23,7 +23,7 @@ app.get("/hello-world", {
     handle: () => "Hello World!",
 })
 
-export adaptCfWorkers(app)
+export default adaptCfWorkers(app)
 ```
 
 ## Complex usage
@@ -90,7 +90,7 @@ app.post("/projects/{projectId}/todos", {
     },
 })
 
-export adaptCfWorkers(app)
+export default adaptCfWorkers(app)
 ```
 
 ## Adapters
@@ -106,7 +106,7 @@ You can write your own adapter using the `app.handle` method, for details, check
 -   Handlers by default provides the `req` argument, extra argument typings are available if Apertum was instantiated with a `G` generic:
 
 ```ts
-const app = new Apertum<{ env: { VARIABLE: string }, ctx: ExecutionContext }>({})
+const app = new Apertum<{ env: { VARIABLE: string }; ctx: ExecutionContext }>({})
 ```
 
 -   All arguments typings defined on `parameters` will be available.
