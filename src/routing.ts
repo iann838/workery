@@ -190,11 +190,10 @@ export class Router<G = {}> {
     push(...routes: Route<any, any, G>[]): number {
         for (const route of routes) {
             this.routes.push(route)
-            const nodes = route.path.split("/")
+            const nodes = route.path.split("/").slice(1)
             let matcher = this.matcher
             const paramNames = []
             for (let [index, node] of nodes.entries()) {
-                if (index == 0) continue
                 if (node[0] == "{" && node[node.length - 1] == "}") {
                     paramNames.push(node.slice(1, -1))
                     node = "{}"
@@ -213,11 +212,10 @@ export class Router<G = {}> {
         method: string,
         path: string
     ): [Route<any, any, G> | undefined | null, Record<string, string>] {
-        const nodes = fixPathSlashes(path).split("/")
+        const nodes = fixPathSlashes(path).split("/").slice(1)
         const paramValues: string[] = []
         let matcher = this.matcher
         for (const [index, node] of nodes.entries()) {
-            if (index == 0) continue
             let nextMatcher = matcher.match(node)
             if (!nextMatcher) return [undefined, {}]
             matcher = nextMatcher

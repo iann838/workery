@@ -2,7 +2,18 @@
 
 Apertum is a modern, OpenAPI based, web framework for building APIs in Node.js and the Edge (Cloudflare Workers, AWS Lambda, etc.).
 
-> Documentation is currently work in progress. For the meantime, use the following short guide.
+> Documentation is currently **work in progress**. For the meantime, use the following short guide.
+
+## Features
+
+-   Fully typed parameters.
+-   Full integration of Zod and OpenAPI Specification.
+-   Middleware with access to request and response.
+-   Dependencies with access to parameters and returnable values.
+-   Automatic coercion for non-body parameters based on schema.
+-   Consistent and clear default error responses [404, 405, 422].
+-   Configurable Swagger and Redoc pages.
+-   Adaptable to any JavaScript runtime.
 
 ## Installation
 
@@ -35,7 +46,7 @@ import { CORSMiddleware, CompressMiddleware } from "apertum/middleware"
 import { Body, Depends, Header, Path, Query, Responds } from "apertum/parameters"
 import { JSONResponse, PlainTextResponse } from "apertum/responses"
 
-const app = new Apertum<{ env: {}, ctx: ExecutionContext }>({
+const app = new Apertum<{ env: {}; ctx: ExecutionContext }>({
     middleware: [CompressMiddleware("gzip"), CORSMiddleware({ origin: ["https://mysite.com"] })],
 })
 
