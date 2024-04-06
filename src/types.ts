@@ -1,4 +1,5 @@
 import type { z } from "zod"
+import type { LinksObject } from "openapi3-ts/oas31"
 import type { Dependency } from "./dependencies"
 import type { Route } from "./routing"
 
@@ -22,41 +23,22 @@ export interface ExecutionContext {
     passThroughOnException(): void
 }
 
-export interface CoerceFunction {
-    <Out = any>(value: string): Out | string
-    <Out = any>(value: string[]): Out[] | string[]
-}
+export type Preprocessor = <Out = any, In = any>(value: In) => Out | In
 
 export interface RouteParameterOptions {
     altName?: string
     mediaType?: string
     description?: string
     includeInSchema?: boolean
-    coerceFunction?: CoerceFunction
+    preprocessor?: Preprocessor
 }
 
 export interface RespondsOptions {
     mediaType?: string
     description?: string
     headers?: Record<string, z.ZodType>
+    links?: LinksObject
 }
-
-export type ZodCoercible =
-    | z.ZodNumber
-    | z.ZodBoolean
-    | z.ZodArray<z.ZodNumber>
-    | z.ZodArray<z.ZodBoolean>
-    | z.ZodOptional<z.ZodNumber>
-    | z.ZodOptional<z.ZodBoolean>
-    | z.ZodDefault<z.ZodNumber>
-    | z.ZodDefault<z.ZodBoolean>
-
-export type ZodPrimitive =
-    | ZodCoercible
-    | z.ZodString
-    | z.ZodArray<z.ZodString>
-    | z.ZodOptional<z.ZodString>
-    | z.ZodDefault<z.ZodString>
 
 export type ZodBodyable = z.ZodType | typeof String | typeof Blob | typeof ReadableStream
 
@@ -67,40 +49,33 @@ export interface RouteParameter<S extends z.ZodType> {
     schema?: S
     schemaOr?: any
     dependency?: Dependency<any, RouteParameters, any>
-    isCoercible: boolean
     options: RouteParameterOptions & { includeInSchema: boolean }
 }
 
-export type PathParameter<S extends ZodPrimitive> = RouteParameter<S> & {
+export type PathParameter<S extends z.ZodType> = RouteParameter<S> & {
     location: "path"
     schema: S
-    options: { coerceFunction: CoerceFunction }
 }
-export type QueryParameter<S extends ZodPrimitive> = RouteParameter<S> & {
+export type QueryParameter<S extends z.ZodType> = RouteParameter<S> & {
     location: "query"
     schema: S
-    options: { coerceFunction: CoerceFunction }
 }
-export type HeaderParameter<S extends ZodPrimitive> = RouteParameter<S> & {
+export type HeaderParameter<S extends z.ZodType> = RouteParameter<S> & {
     location: "header"
     schema: S
-    options: { coerceFunction: CoerceFunction }
 }
-export type CookieParameter<S extends ZodPrimitive> = RouteParameter<S> & {
+export type CookieParameter<S extends z.ZodType> = RouteParameter<S> & {
     location: "cookie"
     schema: S
-    options: { coerceFunction: CoerceFunction }
 }
 export type BodyParameter<S extends z.ZodType> = RouteParameter<S> & {
     location: "body"
     schema: S
-    isCoercible: false
     options: { mediaType: string }
 }
 export type DependsParameter<S extends z.ZodType> = RouteParameter<S> & {
     location: "$depends"
     dependency: Dependency<any, RouteParameters<any>, any>
-    isCoercible: false
 }
 
 export type RouteParameters<E = undefined> = {

@@ -5,7 +5,7 @@ import { CORSMiddleware, CompressMiddleware } from "./middleware"
 import { Body, Depends, Header, Path, Query } from "./parameters"
 import { JSONResponse, PlainTextResponse, Responds } from "./responses"
 
-export const app = new Apertum({
+const app = new Apertum({
     middleware: [CompressMiddleware("gzip"), CORSMiddleware({ origin: ["http://a.co"] })],
 })
 
@@ -23,7 +23,9 @@ const requireAuthSession = new Dependency({
 
 app.get("/hello-world", {
     responseClass: PlainTextResponse,
-    parameters: {},
+    parameters: {
+        testOpenAPI: Query(z.number().array()),
+    },
     handler: () => "Hello World!",
 })
 
@@ -32,8 +34,8 @@ app.post("/projects/{projectId}/todos", {
     summary: "Create project todos",
     description: "Create a todo for a project",
     deprecated: false,
-    statusCode: 200,
     includeInSchema: true,
+    statusCode: 200,
     responseClass: JSONResponse,
     responses: {
         200: Responds(z.object({ params: z.any({}) }), {
@@ -66,17 +68,28 @@ app.post("/projects/{projectId}/todos", {
 
 app.put("/hello-world", {
     responseClass: PlainTextResponse,
-    parameters: {},
+    parameters: {
+        testOpenAPI: Query(z.boolean().array()),
+        blobBody: Body(Blob),
+    },
     handler: () => "Hello World!",
 })
 app.delete("/hello-world", {
     responseClass: PlainTextResponse,
-    parameters: {},
+    parameters: {
+        testOpenAPI: Query(z.enum(["blue", "green", "red", "black", "white"]).array()),
+        textBody: Body(String),
+    },
     handler: () => "Hello World!",
 })
 app.patch("/hello-world", {
     responseClass: PlainTextResponse,
-    parameters: {},
+    parameters: {
+        testOpenAPI: Query(
+            z.nativeEnum({ blue: 10, green: 20, red: 30, black: 40, white: 50 }).array()
+        ),
+        streamBody: Body(ReadableStream),
+    },
     handler: () => "Hello World!",
 })
 app.trace("/hello-world", {
@@ -254,6 +267,7 @@ describe("class Apertum", () => {
 
     test("[method] openapi: return value simple", () => {
         const openapi = app.openapi()
+        console.log(JSON.stringify(openapi))
         expect(openapi).toBeTruthy()
         expect(Object.entries(openapi.paths!).length).toBeTruthy()
     })

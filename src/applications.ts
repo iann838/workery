@@ -214,13 +214,17 @@ export class Apertum<E = undefined> {
                 const parseInfo = await parseArgs<RouteParameters<E>, E>(
                     route.parameters,
                     baseArgs,
-                    { params, queries, cookies }
+                    {
+                        params,
+                        queries,
+                        cookies,
+                    }
                 )
                 if (parseInfo.success) {
                     try {
                         const res = await route.handler(parseInfo.args)
                         if (res instanceof Response) return res
-                        return new route.responseClass(res)
+                        return new route.responseClass(res, { status: route.statusCode })
                     } catch (e) {
                         if (e instanceof Response) return e
                         throw e

@@ -7,7 +7,7 @@ import {
     JSONCoerce,
     Path,
     Query,
-    isZodCoercible,
+    isJSONCoercible,
     parseArgs,
 } from "./parameters"
 import { Dependency } from "./dependencies"
@@ -24,25 +24,48 @@ describe("function JSONCoerce", () => {
     })
 })
 
-describe("function isZodCoercible", () => {
+describe("function isJSONCoercible", () => {
     test("[invocation]: return value zod number", () => {
-        expect(isZodCoercible(z.number())).toBe(true)
-        expect(isZodCoercible(z.number().max(256))).toBe(true)
-        expect(isZodCoercible(z.number().optional())).toBe(true)
-        expect(isZodCoercible(z.number().array())).toBe(true)
+        expect(isJSONCoercible(z.number())).toBe(true)
+        expect(isJSONCoercible(z.number().max(256))).toBe(true)
+        expect(isJSONCoercible(z.number().optional())).toBe(true)
+        expect(isJSONCoercible(z.number().default(1))).toBe(true)
+        expect(isJSONCoercible(z.number().array())).toBe(true)
     })
 
     test("[invocation]: return value zod boolean", () => {
-        expect(isZodCoercible(z.boolean())).toBe(true)
-        expect(isZodCoercible(z.boolean().optional())).toBe(true)
-        expect(isZodCoercible(z.boolean().array())).toBe(true)
+        expect(isJSONCoercible(z.boolean())).toBe(true)
+        expect(isJSONCoercible(z.boolean().optional())).toBe(true)
+        expect(isJSONCoercible(z.boolean().default(true))).toBe(true)
+        expect(isJSONCoercible(z.boolean().array())).toBe(true)
+    })
+
+    test("[invocation]: return value zod enum", () => {
+        expect(isJSONCoercible(z.enum(["a", "b"]))).toBe(false)
+        expect(isJSONCoercible(z.enum(["a", "b"]).optional())).toBe(false)
+        expect(isJSONCoercible(z.enum(["a", "b"]).default("a"))).toBe(false)
+        expect(isJSONCoercible(z.enum(["a", "b"]).array())).toBe(false)
+    })
+
+    test("[invocation]: return value zod native enum", () => {
+        expect(isJSONCoercible(z.nativeEnum({ a: 1, b: 2 }))).toBe(true)
+        expect(isJSONCoercible(z.nativeEnum({ a: 1, b: 2 }).optional())).toBe(true)
+        expect(isJSONCoercible(z.nativeEnum({ a: 1, b: 2 }).default(1))).toBe(true)
+        expect(isJSONCoercible(z.nativeEnum({ a: 1, b: 2 }).array())).toBe(true)
+        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: 2 }))).toBe(true)
+        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: 2 }).optional())).toBe(true)
+        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: 2 }).default("1"))).toBe(true)
+        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: 2 }).array())).toBe(true)
+        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: "2" }))).toBe(false)
+        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: "2" }).optional())).toBe(false)
+        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: "2" }).array())).toBe(false)
     })
 
     test("[invocation]: return value not coercible", () => {
-        expect(isZodCoercible(z.string())).toBe(false)
-        expect(isZodCoercible(z.string().array())).toBe(false)
-        expect(isZodCoercible(z.bigint().array())).toBe(false)
-        expect(isZodCoercible(z.object({}))).toBe(false)
+        expect(isJSONCoercible(z.string())).toBe(false)
+        expect(isJSONCoercible(z.string().array())).toBe(false)
+        expect(isJSONCoercible(z.bigint().array())).toBe(false)
+        expect(isJSONCoercible(z.object({}))).toBe(false)
     })
 })
 
@@ -52,6 +75,7 @@ describe("function Path", () => {
         const routeParam = Path(schema)
         expect(routeParam.location).toBe("path")
         expect(routeParam.schema).toBe(schema)
+        expect(routeParam.options.preprocessor).toBe(JSONCoerce)
     })
 })
 
@@ -61,6 +85,7 @@ describe("function Query", () => {
         const routeParam = Query(schema)
         expect(routeParam.location).toBe("query")
         expect(routeParam.schema).toBe(schema)
+        expect(routeParam.options.preprocessor).toBe(JSONCoerce)
     })
 })
 
@@ -91,7 +116,6 @@ describe("function Body", () => {
         const routeParam = Body(schema)
         expect(routeParam.location).toBe("body")
         expect(routeParam.schema).toBe(schema)
-        expect(routeParam.isCoercible).toBe(false)
     })
 })
 
@@ -106,24 +130,26 @@ describe("function Depends", () => {
         const routeParam = Depends(dependency)
         expect(routeParam.location).toBe("$depends")
         expect(routeParam.dependency).toBe(dependency)
-        expect(routeParam.isCoercible).toBe(false)
     })
 })
 
 describe("function parseArgs", () => {
     test("[invocation]: return value success empty", async () => {
         const parseInfo1 = await parseArgs({}, { req: new Request("http://a.co/notimportant") })
-        expect(parseInfo1.success).toBe(true)
-        expect(parseInfo1.args).toStrictEqual({})
         expect(parseInfo1.errors).toStrictEqual([])
+        expect(parseInfo1.args).toStrictEqual({})
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value success flat", async () => {
         const parseInfo1 = await parseArgs(
             {
                 pPath: Path(z.number()),
+                pPathEnum: Path(z.enum(["yellow", "green", "blue"])),
                 pQuery: Query(z.boolean()),
+                pQueryNenum: Query(z.nativeEnum({ ok: 200, bad: 400, error: 500 })),
                 pQueryArr: Query(z.number().array()),
+                pQueryArrNenum: Query(z.nativeEnum({ ok: 200, bad: 400, error: 500 }).array()),
                 p_Header: Header(z.string()),
                 pCookie: Cookie(z.string(), { altName: "pAltCookie" }),
                 pBody: Body(z.object({ key: z.string(), value: z.number() })),
@@ -136,21 +162,29 @@ describe("function parseArgs", () => {
                 }),
             },
             {
-                params: { pPath: "23" },
-                queries: { pQuery: ["true"], pQueryArr: ["5", "9"] },
+                params: { pPath: "23", pPathEnum: "blue" },
+                queries: {
+                    pQuery: ["true"],
+                    pQueryNenum: ["200"],
+                    pQueryArr: ["5", "9"],
+                    pQueryArrNenum: ["200", "500"],
+                },
                 cookies: { pAltCookie: "ctext" },
             }
         )
-        expect(parseInfo1.success).toBe(true)
         expect(parseInfo1.errors).toStrictEqual([])
         expect(parseInfo1.args).toStrictEqual({
             pPath: 23,
+            pPathEnum: "blue",
             pQuery: true,
+            pQueryNenum: 200,
             pQueryArr: [5, 9],
+            pQueryArrNenum: [200, 500],
             p_Header: "htext",
             pCookie: "ctext",
             pBody: { key: "mykey", value: 12 },
         })
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value success body json", async () => {
@@ -165,11 +199,11 @@ describe("function parseArgs", () => {
                 }),
             }
         )
-        expect(parseInfo1.success).toBe(true)
         expect(parseInfo1.errors).toStrictEqual([])
         expect(parseInfo1.args).toStrictEqual({
             pBody: { key: "mykey", value: 12 },
         })
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value success body text", async () => {
@@ -184,11 +218,11 @@ describe("function parseArgs", () => {
                 }),
             }
         )
-        expect(parseInfo1.success).toBe(true)
         expect(parseInfo1.errors).toStrictEqual([])
         expect(parseInfo1.args).toStrictEqual({
             pBody: "mysampletext",
         })
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value success body blob", async () => {
@@ -203,9 +237,9 @@ describe("function parseArgs", () => {
                 }),
             }
         )
-        expect(parseInfo1.success).toBe(true)
         expect(parseInfo1.errors).toStrictEqual([])
         expect(await parseInfo1.args.pBody.text()).toBe("mysampletext")
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value success body stream", async () => {
@@ -220,9 +254,9 @@ describe("function parseArgs", () => {
                 }),
             }
         )
-        expect(parseInfo1.success).toBe(true)
         expect(parseInfo1.errors).toStrictEqual([])
         expect(parseInfo1.args.pBody).toBeInstanceOf(ReadableStream)
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value success optional", async () => {
@@ -242,9 +276,9 @@ describe("function parseArgs", () => {
                 params: { pPath: "23" },
             }
         )
-        expect(parseInfo1.success).toBe(true)
         expect(parseInfo1.errors).toStrictEqual([])
         expect(parseInfo1.args).toStrictEqual({ pPath: 23, pQuery: undefined })
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value success default", async () => {
@@ -264,9 +298,9 @@ describe("function parseArgs", () => {
                 params: { pPath: "23" },
             }
         )
-        expect(parseInfo1.success).toBe(true)
         expect(parseInfo1.errors).toStrictEqual([])
         expect(parseInfo1.args).toStrictEqual({ pPath: 23, pQuery: true })
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value success depended", async () => {
@@ -298,7 +332,6 @@ describe("function parseArgs", () => {
                 cookies: { pAltCookie: "ctext" },
             }
         )
-        expect(parseInfo1.success).toBe(true)
         expect(parseInfo1.errors).toStrictEqual([])
         expect(parseInfo1.args).toStrictEqual({
             pPath: 23,
@@ -307,6 +340,7 @@ describe("function parseArgs", () => {
             pDepend: "htextctext",
             pBody: { key: "mykey", value: 12 },
         })
+        expect(parseInfo1.success).toBe(true)
     })
 
     test("[invocation]: return value fail flat", async () => {
@@ -325,8 +359,8 @@ describe("function parseArgs", () => {
                 params: { pPath: "23" },
             }
         )
-        expect(parseInfo1.success).toBe(false)
         expect(parseInfo1.errors.length).toBe(1)
+        expect(parseInfo1.success).toBe(false)
 
         const parseInfo2 = await parseArgs(
             {
@@ -343,8 +377,8 @@ describe("function parseArgs", () => {
                 params: { pPath: "abc" },
             }
         )
-        expect(parseInfo2.success).toBe(false)
         expect(parseInfo2.errors.length).toBe(2)
+        expect(parseInfo2.success).toBe(false)
     })
 
     test("[invocation]: return value fail depends", async () => {
@@ -373,8 +407,8 @@ describe("function parseArgs", () => {
                 cookies: { pAltCookie: "ctext" },
             }
         )
-        expect(parseInfo1.success).toBe(false)
         expect(parseInfo1.errors.length).toBe(1)
+        expect(parseInfo1.success).toBe(false)
     })
 
     test("[invocation]: return value fail required", async () => {
@@ -394,7 +428,7 @@ describe("function parseArgs", () => {
                 params: { pPath: "23" },
             }
         )
-        expect(parseInfo1.success).toBe(false)
         expect(parseInfo1.errors.length).toBe(1)
+        expect(parseInfo1.success).toBe(false)
     })
 })

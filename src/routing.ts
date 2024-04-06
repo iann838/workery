@@ -3,11 +3,11 @@ import type { ServerObject } from "openapi3-ts/oas31"
 import type { ResponseConfig, RouteConfig, ZodRequestBody } from "@asteasolutions/zod-to-openapi"
 import { JSONResponse } from "./responses"
 import type {
+    BodyParameter,
     HTTPMethod,
     HTTPMethodLower,
     ResponseClass,
     RouteHandler,
-    RouteParameter,
     RouteParameters,
 } from "./types"
 
@@ -43,8 +43,8 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
         deprecated?: boolean
         servers?: ServerObject[]
         responses?: Record<number, ResponseConfig>
-        statusCode?: number
         includeInSchema?: boolean
+        statusCode?: number
         responseClass?: ResponseClass
         parameters: Ps
         handler: RouteHandler<R, Ps, E>
@@ -56,10 +56,10 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
         this.summary = init.summary ?? ""
         this.description = init.description ?? ""
         this.deprecated = init.deprecated ?? false
-        this.responses = init.responses ?? {}
         this.servers = init.servers
-        this.statusCode = init.statusCode ?? 200
+        this.responses = init.responses ?? {}
         this.includeInSchema = init.includeInSchema ?? true
+        this.statusCode = init.statusCode ?? 200
         this.responseClass = init.responseClass ?? JSONResponse
         this.parameters = init.parameters
         this.handler = init.handler
@@ -75,29 +75,27 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
             }
         }
         flattenParameters(this.parameters)
-        const reduceParameters = <R>(
-            reducer: (name: string, parameter: RouteParameter<z.ZodType>) => R | undefined
-        ) => {
-            const out: Record<string, R> = {}
-            for (const [name, parameter] of Object.entries(flatParameters)) {
-                if (!parameter.options.includeInSchema) continue
-                const reduced = reducer(name, parameter)
-                if (reduced !== undefined) out[name] = reduced
-            }
-            return out
+
+        let bodyParameter: BodyParameter<z.ZodType> | undefined = undefined
+        const paramSchemas: Record<string, Record<string, z.ZodType>> = {
+            path: {},
+            query: {},
+            header: {},
+            cookie: {},
         }
-        const bodyParameter = Object.values(
-            reduceParameters((_, p) => {
-                if (p.location == "body") return p
-            })
-        )[0]
+        for (const [name, parameter] of Object.entries(flatParameters)) {
+            if (!parameter.options.includeInSchema) continue
+            else if (parameter.location == "body")
+                bodyParameter = parameter as BodyParameter<z.ZodType>
+            else paramSchemas[parameter.location][name] = parameter.schema!
+        }
         let body: ZodRequestBody | undefined = undefined
         if (bodyParameter) {
             if (bodyParameter.schemaOr) {
                 body = {
                     description: bodyParameter.options.description,
                     content: {
-                        [bodyParameter.options?.mediaType ?? "application/json"]: {
+                        [bodyParameter.options?.mediaType]: {
                             schema:
                                 bodyParameter.schemaOr === String
                                     ? { type: "string" }
@@ -111,7 +109,7 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
                         bodyParameter.options.description ??
                         bodyParameter.schema?._def.openapi?.metadata?.description,
                     content: {
-                        [bodyParameter.options?.mediaType ?? "application/json"]: {
+                        [bodyParameter.options?.mediaType]: {
                             schema: bodyParameter.schema as z.ZodType<unknown>,
                         },
                     },
@@ -128,26 +126,10 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
             servers: this.servers,
             request: {
                 body: body,
-                params: z.object(
-                    reduceParameters((_, p) => {
-                        if (p.location == "path") return p.schema
-                    })
-                ),
-                query: z.object(
-                    reduceParameters((_, p) => {
-                        if (p.location == "query") return p.schema
-                    })
-                ),
-                headers: z.object(
-                    reduceParameters((_, p) => {
-                        if (p.location == "header") return p.schema
-                    })
-                ),
-                cookies: z.object(
-                    reduceParameters((_, p) => {
-                        if (p.location == "cookie") return p.schema
-                    })
-                ),
+                params: z.object(paramSchemas.path),
+                query: z.object(paramSchemas.query),
+                headers: z.object(paramSchemas.header),
+                cookies: z.object(paramSchemas.cookie),
             },
             responses: this.responses,
         }
