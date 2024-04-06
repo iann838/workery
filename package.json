@@ -1,6 +1,6 @@
 {
     "name": "apertum",
-    "version": "1.0.0-alpha.1",
+    "version": "1.0.0-alpha.2",
     "description": "Apertum router, openapi based, fast to code, fully typed.",
     "type": "module",
     "main": "./dist/index.cjs",
