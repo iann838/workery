@@ -14,20 +14,19 @@ import { Route, Router, searchParamsToQueries } from "./routing"
 import type {
     ArgsOf,
     ExceptionHandler,
-    FetchParameters,
     HeadlessRoute,
     HTTPMethod,
     ResponseClass,
     RouteParameters,
 } from "./types"
-import { SwaggerTemplate, RedocTemplate } from "./templates"
+import { renderSwagger, renderRedoc } from "./renderers"
 
-export function defaultExceptionHandler<E>(_: ArgsOf<{}, E>, e: any) {
+export function defaultExceptionHandler<G>(_: ArgsOf<{}, G>, e: any) {
     console.error(e)
     return new Response("Internal Server Error", { status: 500 })
 }
 
-export class Apertum<E = undefined> {
+export class Apertum<G = {}> {
     basePath: string
     title: string
     description: string
@@ -40,11 +39,11 @@ export class Apertum<E = undefined> {
     openapiUrl: string | null
     swaggerUrl: string | null
     redocUrl: string | null
-    middleware: Middleware<E>[]
+    middleware: Middleware<G>[]
     defaultResponseClass: ResponseClass
-    exceptionHandler: ExceptionHandler<E>
+    exceptionHandler: ExceptionHandler<G>
 
-    router: Router<E>
+    router: Router<G>
     private _openapi?: OpenAPIObject
 
     constructor(init: {
@@ -60,9 +59,9 @@ export class Apertum<E = undefined> {
         openapiUrl?: string | null
         swaggerUrl?: string | null
         redocUrl?: string | null
-        middleware?: Middleware<E>[]
+        middleware?: Middleware<G>[]
         defaultResponseClass?: ResponseClass
-        exceptionHandler?: ExceptionHandler<E>
+        exceptionHandler?: ExceptionHandler<G>
     }) {
         this.basePath = init.basePath ?? ""
         this.title = init.title ?? "Untitled"
@@ -80,22 +79,22 @@ export class Apertum<E = undefined> {
         this.defaultResponseClass = init.defaultResponseClass ?? JSONResponse
         this.exceptionHandler = init.exceptionHandler ?? defaultExceptionHandler
 
-        this.router = new Router<E>()
+        this.router = new Router<G>()
 
         if (this.openapiUrl) {
             this.get(this.openapiUrl, {
                 includeInSchema: false,
                 responseClass: JSONResponse,
                 parameters: {},
-                handler: () => this.openapi(),
+                handle: () => this.openapi(),
             })
             if (this.swaggerUrl)
                 this.get(this.swaggerUrl, {
                     includeInSchema: false,
                     responseClass: HTMLResponse,
                     parameters: {},
-                    handler: () =>
-                        SwaggerTemplate(this.openapiUrl!, {
+                    handle: () =>
+                        renderSwagger(this.openapiUrl!, {
                             title: this.title,
                         }),
                 })
@@ -104,68 +103,68 @@ export class Apertum<E = undefined> {
                     includeInSchema: false,
                     responseClass: HTMLResponse,
                     parameters: {},
-                    handler: () =>
-                        RedocTemplate(this.openapiUrl!, {
+                    handle: () =>
+                        renderRedoc(this.openapiUrl!, {
                             title: this.title,
                         }),
                 })
         }
     }
 
-    get<R, Ps extends RouteParameters<E>>(
+    get<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         return this.route("GET", path, headlessRoute)
     }
-    post<R, Ps extends RouteParameters<E>>(
+    post<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         return this.route("POST", path, headlessRoute)
     }
-    put<R, Ps extends RouteParameters<E>>(
+    put<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         return this.route("PUT", path, headlessRoute)
     }
-    delete<R, Ps extends RouteParameters<E>>(
+    delete<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         return this.route("DELETE", path, headlessRoute)
     }
-    patch<R, Ps extends RouteParameters<E>>(
+    patch<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         return this.route("PATCH", path, headlessRoute)
     }
-    head<R, Ps extends RouteParameters<E>>(
+    head<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         return this.route("HEAD", path, headlessRoute)
     }
-    trace<R, Ps extends RouteParameters<E>>(
+    trace<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         return this.route("TRACE", path, headlessRoute)
     }
-    options<R, Ps extends RouteParameters<E>>(
+    options<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         return this.route("OPTIONS", path, headlessRoute)
     }
 
-    route<R, Ps extends RouteParameters<E>>(
+    route<R, Ps extends RouteParameters>(
         method: HTTPMethod,
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
+        headlessRoute: HeadlessRoute<R, Ps, G>
+    ): Route<R, Ps, G> {
         this._openapi = undefined
         const route = new Route({
             method: method,
@@ -200,29 +199,27 @@ export class Apertum<E = undefined> {
         return this._openapi
     }
 
-    async fetch(...[req, env, ctx]: FetchParameters<E>): Promise<Response> {
-        const baseArgs = { req, env, ctx } as ArgsOf<{}, E>
+    async handle(baseArgs: ArgsOf<{}, G>): Promise<Response> {
+        const { req } = baseArgs
         try {
             const url = new URL(req.url)
             const [route, params] = this.router.match(req.method, url.pathname)
             if (route === undefined)
                 return new JSONResponse({ detail: "Not Found" }, { status: 404 })
+            if (route === null)
+                return new JSONResponse({ detail: "Method Not Allowed" }, { status: 405 })
             const cookies = cookie.parse(req.headers.get("Cookie") ?? "")
             const queries = searchParamsToQueries(url.searchParams)
             const nextMap: Record<string, () => Promise<Response>> = {}
             let next = async () => {
-                const parseInfo = await parseArgs<RouteParameters<E>, E>(
-                    route.parameters,
-                    baseArgs,
-                    {
-                        params,
-                        queries,
-                        cookies,
-                    }
-                )
+                const parseInfo = await parseArgs<RouteParameters, G>(route.parameters, baseArgs, {
+                    params,
+                    queries,
+                    cookies,
+                })
                 if (parseInfo.success) {
                     try {
-                        const res = await route.handler(parseInfo.args)
+                        const res = await route.handle(parseInfo.args)
                         if (res instanceof Response) return res
                         return new route.responseClass(res, { status: route.statusCode })
                     } catch (e) {
@@ -235,7 +232,7 @@ export class Apertum<E = undefined> {
             nextMap[this.middleware.length - 1] = next
             for (let i = this.middleware.length - 1; i >= 0; i--) {
                 const middleware = this.middleware[i]
-                next = async () => await middleware.handler(baseArgs, nextMap[i])
+                next = async () => await middleware.handle(baseArgs, nextMap[i])
                 nextMap[i - 1] = next
             }
             return await next()

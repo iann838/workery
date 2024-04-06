@@ -1,6 +1,6 @@
 # Apertum
 
-Apertum is a modern, OpenAPI based, web framework for building APIs for the Edges. It works on Cloudflare Workers, AWS Lambda and Node.js.
+Apertum is a modern, OpenAPI based, web framework for building APIs in Node.js and the Edge (Cloudflare Workers, AWS Lambda, etc.).
 
 > Documentation is currently work in progress. For the meantime, use the following short guide.
 
@@ -13,35 +13,29 @@ npm install apertum
 ## Quick Start
 
 ```ts
-import { Apertum } from "./applications"
+import { Apertum } from "apertum"
+import { adaptCfWorkers } from "apertum/adapters"
 
 const app = new Apertum({})
 
 app.get("/hello-world", {
     parameters: {},
-    handler: () => "Hello World!",
+    handle: () => "Hello World!",
 })
 
-export app
-```
-
-Apertum instances provides a `fetch` API used by Edge runtimes.
-
-```ts
-app.fetch(request, env, ctx)
+export adaptCfWorkers(app)
 ```
 
 ## Complex usage
 
 ```ts
 import { z } from "zod"
-import { Apertum } from "./applications"
-import { Dependency } from "./dependencies"
-import { CORSMiddleware, CompressMiddleware } from "./middleware"
-import { Body, Depends, Header, Path, Query } from "./parameters"
-import { JSONResponse, PlainTextResponse, Responds } from "./responses"
+import { Apertum, Dependency } from "apertum"
+import { CORSMiddleware, CompressMiddleware } from "apertum/middleware"
+import { Body, Depends, Header, Path, Query, Responds } from "apertum/parameters"
+import { JSONResponse, PlainTextResponse } from "apertum/responses"
 
-const app = new Apertum({
+const app = new Apertum<{ env: {}, ctx: ExecutionContext }>({
     middleware: [CompressMiddleware("gzip"), CORSMiddleware({ origin: ["https://mysite.com"] })],
 })
 
@@ -49,7 +43,7 @@ const requireAuthSession = new Dependency({
     parameters: {
         authorization: Header(z.string()),
     },
-    handler: async ({ authorization }) => {
+    handle: async ({ authorization }) => {
         return { id: 123, username: "myuser" } // Authentication logic
     },
 })
@@ -59,7 +53,7 @@ app.get("/hello-world", {
     parameters: {
         testOpenAPI: Query(z.number().array()),
     },
-    handler: () => "Hello World!",
+    handle: () => "Hello World!",
 })
 
 app.post("/projects/{projectId}/todos", {
@@ -91,11 +85,21 @@ app.post("/projects/{projectId}/todos", {
         ),
         session: Depends(requireAuthSession),
     },
-    handler: ({ req, projectId, trackId, X_Rate_Limit, todoItem, session }) => {
+    handle: ({ req, projectId, trackId, X_Rate_Limit, todoItem, session }) => {
         // Handler implementation here
     },
 })
+
+export adaptCfWorkers(app)
 ```
+
+## Adapters
+
+Apertum requires adapters to support different JavaScript runtimes. Available built-in adapters:
+
+-   `adaptCfWorkers`: Exposes the `fetch` API for Cloudflare Workers.
+
+You can write your own adapter using the `app.handle` method, for details, check implementation of `adaptCfWorkers`.
 
 ## Handlers
 
@@ -109,7 +113,7 @@ const app = new Apertum<{ VARIABLE: string }>({})
 
 ## Parameters
 
--   For non-body parameters, an automatic coercion `options.preprocessor` is used if it detects that `isJSONCoercible(schema) == true`, qualified schemas includes but not limited to:
+-   For non-body parameters, an automatic coercion `options.preprocessor` is used if it detects that `isJsonCoercible(schema) == true` (from `apertum/helpers`), qualified schemas includes but not limited to:
     -   `ZodNumber`
     -   `ZodBoolean`
     -   `ZodNativeEnum`
@@ -122,13 +126,14 @@ const app = new Apertum<{ VARIABLE: string }>({})
     -   `ZodDefault<ZodNumber>`
     -   `ZodDefault<ZodBoolean>`
     -   `ZodDefault<ZodNativeEnum>`
--   To preprocess parameters before being parsed by zod, pass the preprocessor function to `options.preprocessor`, for example: `Path(z.number(), { preprocessor: JSONCoerce })`.
+-   To preprocess parameters before being parsed by zod, pass the preprocessor function to `options.preprocessor`, for example: `Path(z.number(), { preprocessor: jsonCoerce })`.
 -   Body parameters access 3 more values other than zod types: `String`, `Blob` and `ReadableStream` (passed as is). Here is how it interprets in OAS:
     -   `Body(String)`: Receives a text body, returns `await req.text()`.
     -   `Body(Blob)`: Receives a binary file body, returns `await req.blob()`.
     -   `Body(ReadableStream)`: Receives a binary file body, returns `req.body` without reading it.
 -   Body parameters can specify a `options.mediaType`, defaults to `application/json`.
 -   Depends parameters are in other words: unorganized middlewares that returns a value. The parameter specifications in dependencies will be rendered on the route automatically, however, if you wish to use the values of a dependency parameter and for its typings to work, you must manually include it on the route parameters using `...myDependency.parameters`.
+-   Responds parameters specifies the OpenAPI response structure for the route, it returns an OAS3.1 `ResponseConfig` and works interchangeably.
 
 ## Responses
 
@@ -136,15 +141,15 @@ const app = new Apertum<{ VARIABLE: string }>({})
 -   Returning Non-Response values will use responseClass to create a Response before returning.
 -   Response instances can be thrown anywhere including dependencies and middlewares (`throw new JSONResponse({ detail: "Conflict" }, { status: 409 })`).
 -   Thrown values will be catched twice:
-    1. Route handler: return if value is instance of Response, otherwise throw.
-    2. Fetch handler: return if value is instance of Response, otherwise invoke exceptionHandler.
+    1. Route handle: return if value is instance of Response, otherwise throw.
+    2. Fetch handle: return if value is instance of Response, otherwise invoke exceptionHandler.
 
 ## API Reference
 
 > This reference is not complete, only accounting the main ones.
 
 ```ts
-class Apertum<E = undefined> {
+class Apertum<G = {}> {
     constructor(init: {
         basePath?: string
         title?: string
@@ -158,9 +163,9 @@ class Apertum<E = undefined> {
         openapiUrl?: string | null
         swaggerUrl?: string | null
         redocUrl?: string | null
-        middleware?: Middleware<E>[]
+        middleware?: Middleware<G>[]
         defaultResponseClass?: ResponseClass
-        exceptionHandler?: ExceptionHandler<E>
+        exceptionHandler?: ExceptionHandler<G>
     }) {
         this.basePath = init.basePath ?? ""
         this.title = init.title ?? "Untitled"
@@ -180,7 +185,7 @@ class Apertum<E = undefined> {
     }
 }
 
-type HeadlessRoute<R, Ps extends RouteParameters<E>, E> = {
+type HeadlessRoute<R, Ps extends RouteParameters, G> = {
     name?: string
     tags?: string[]
     summary?: string
@@ -192,20 +197,20 @@ type HeadlessRoute<R, Ps extends RouteParameters<E>, E> = {
     statusCode?: number
     responseClass?: ResponseClass
     parameters: Ps
-    handler: RouteHandler<R, Ps, E>
+    handle: RouteHandler<R, Ps, G>
 }
 
-class Middleware<E = undefined> {
-    envOf?: Apertum<E>
+class Middleware<G = {}> {
+    of?: Apertum<G> // Typing purposes only (infering G)
     name?: string
-    handler: MiddlewareHandler<E>
+    handle: MiddlewareHandler<G>
 }
 
-class Dependency<R, Ps extends RouteParameters<E>, E = undefined> {
-    envOf?: Apertum<E>
+class Dependency<R, Ps extends RouteParameters, G = {}> {
+    of?: Apertum<G> // Typing purposes only (infering G)
     name?: string
     parameters: Ps
-    handler: RouteHandler<R, Ps, E>
+    handle: RouteHandler<R, Ps, G>
 }
 
 function Path(
@@ -234,6 +239,8 @@ function Body(
 ): BodyParameter<z.ZodType>
 
 function Depends<R>(dependency: Dependency<R, any, any>): DependsParameter<z.ZodType<R>>
+
+function Responds(schema: ZodBodyable = String, options?: RespondsOptions): ResponseConfig
 
 class JSONResponse extends Response {
     constructor(body: any, init?: ResponseInit) {

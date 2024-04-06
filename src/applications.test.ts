@@ -2,8 +2,8 @@ import { z } from "zod"
 import { Apertum } from "./applications"
 import { Dependency } from "./dependencies"
 import { CORSMiddleware, CompressMiddleware } from "./middleware"
-import { Body, Depends, Header, Path, Query } from "./parameters"
-import { JSONResponse, PlainTextResponse, Responds } from "./responses"
+import { Body, Depends, Header, Path, Query, Responds } from "./parameters"
+import { JSONResponse, PlainTextResponse } from "./responses"
 
 const app = new Apertum({
     middleware: [CompressMiddleware("gzip"), CORSMiddleware({ origin: ["http://a.co"] })],
@@ -14,7 +14,7 @@ const requireAuthSession = new Dependency({
     parameters: {
         authorization: Header(z.string()),
     },
-    handler: async ({ authorization }) => {
+    handle: async ({ authorization }) => {
         if (authorization == "iminvalid")
             throw new JSONResponse({ detail: "Invalid Authentication" }, { status: 403 })
         return { id: 123, token: authorization }
@@ -26,7 +26,7 @@ app.get("/hello-world", {
     parameters: {
         testOpenAPI: Query(z.number().array()),
     },
-    handler: () => "Hello World!",
+    handle: () => "Hello World!",
 })
 
 app.post("/projects/{projectId}/todos", {
@@ -57,7 +57,7 @@ app.post("/projects/{projectId}/todos", {
         ),
         session: Depends(requireAuthSession),
     },
-    handler: ({ projectId, trackId, X_Rate_Limit, todoItem, session }) => {
+    handle: ({ projectId, trackId, X_Rate_Limit, todoItem, session }) => {
         if (trackId == "throwme")
             throw new JSONResponse({ detail: "Thrown trackId" }, { status: 409 })
         return {
@@ -72,7 +72,7 @@ app.put("/hello-world", {
         testOpenAPI: Query(z.boolean().array()),
         blobBody: Body(Blob),
     },
-    handler: () => "Hello World!",
+    handle: () => "Hello World!",
 })
 app.delete("/hello-world", {
     responseClass: PlainTextResponse,
@@ -80,7 +80,7 @@ app.delete("/hello-world", {
         testOpenAPI: Query(z.enum(["blue", "green", "red", "black", "white"]).array()),
         textBody: Body(String),
     },
-    handler: () => "Hello World!",
+    handle: () => "Hello World!",
 })
 app.patch("/hello-world", {
     responseClass: PlainTextResponse,
@@ -90,23 +90,23 @@ app.patch("/hello-world", {
         ),
         streamBody: Body(ReadableStream),
     },
-    handler: () => "Hello World!",
+    handle: () => "Hello World!",
 })
 app.trace("/hello-world", {
     responseClass: PlainTextResponse,
     parameters: {},
-    handler: () => "Hello World!",
+    handle: () => "Hello World!",
 })
 app.options("/hello-world", {
     responseClass: PlainTextResponse,
     parameters: {},
-    handler: () => "Hello World!",
+    handle: () => "Hello World!",
 })
 
 describe("class Apertum", () => {
-    test("[method] fetch: success", async () => {
-        const res1 = await app.fetch(
-            new Request("http://a.co/projects/123/todos?trackId=abc", {
+    test("[method] handle: success", async () => {
+        const res1 = await app.handle({
+            req: new Request("http://a.co/projects/123/todos?trackId=abc", {
                 method: "POST",
                 body: JSON.stringify({
                     id: "iid",
@@ -117,8 +117,8 @@ describe("class Apertum", () => {
                     "X-Rate-Limit": "20:100",
                     authorization: "Bearer myauthtoken",
                 },
-            })
-        )
+            }),
+        })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(200)
         expect(await res1.json()).toEqual({
@@ -140,9 +140,9 @@ describe("class Apertum", () => {
         expect(res1.headers.get("Access-Control-Allow-Origin")).toBe("http://a.co")
     })
 
-    test("[method] fetch: success cors reject", async () => {
-        const res1 = await app.fetch(
-            new Request("http://b.co/projects/123/todos?trackId=abc", {
+    test("[method] handle: success cors reject", async () => {
+        const res1 = await app.handle({
+            req: new Request("http://b.co/projects/123/todos?trackId=abc", {
                 method: "POST",
                 body: JSON.stringify({
                     id: "iid",
@@ -153,8 +153,8 @@ describe("class Apertum", () => {
                     "X-Rate-Limit": "20:100",
                     authorization: "Bearer myauthtoken",
                 },
-            })
-        )
+            }),
+        })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(200)
         expect(await res1.json()).toEqual({
@@ -176,9 +176,9 @@ describe("class Apertum", () => {
         expect(res1.headers.get("Access-Control-Allow-Origin")).not.toBe("http://b.co")
     })
 
-    test("[method] fetch: success gzip", async () => {
-        const res1 = await app.fetch(
-            new Request("http://a.co/projects/123/todos?trackId=abc", {
+    test("[method] handle: success gzip", async () => {
+        const res1 = await app.handle({
+            req: new Request("http://a.co/projects/123/todos?trackId=abc", {
                 method: "POST",
                 body: JSON.stringify({
                     id: "iid",
@@ -190,8 +190,8 @@ describe("class Apertum", () => {
                     authorization: "Bearer myauthtoken",
                     "Accept-Encoding": "gzip",
                 },
-            })
-        )
+            }),
+        })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(200)
         const stream = new DecompressionStream("gzip")
@@ -213,21 +213,21 @@ describe("class Apertum", () => {
         })
     })
 
-    test("[method] fetch: fail path not found", async () => {
-        const res1 = await app.fetch(new Request("http://a.co/"))
+    test("[method] handle: fail path not found", async () => {
+        const res1 = await app.handle({ req: new Request("http://a.co/") })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(404)
         expect(await res1.json()).toEqual({ detail: "Not Found" })
 
-        const res2 = await app.fetch(new Request("http://a.co/nopath"))
+        const res2 = await app.handle({ req: new Request("http://a.co/nopath") })
         expect(res2).toBeTruthy()
         expect(res2.status).toBe(404)
         expect(await res2.json()).toEqual({ detail: "Not Found" })
     })
 
-    test("[method] fetch: fail route throw", async () => {
-        const res1 = await app.fetch(
-            new Request("http://a.co/projects/123/todos?trackId=throwme", {
+    test("[method] handle: fail route throw", async () => {
+        const res1 = await app.handle({
+            req: new Request("http://a.co/projects/123/todos?trackId=throwme", {
                 method: "POST",
                 body: JSON.stringify({
                     id: "iid",
@@ -238,16 +238,16 @@ describe("class Apertum", () => {
                     "X-Rate-Limit": "20:100",
                     authorization: "Bearer myauthtoken",
                 },
-            })
-        )
+            }),
+        })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(409)
         expect(await res1.json()).toEqual({ detail: "Thrown trackId" })
     })
 
-    test("[method] fetch: fail dependency throw", async () => {
-        const res1 = await app.fetch(
-            new Request("http://a.co/projects/123/todos?trackId=abc", {
+    test("[method] handle: fail dependency throw", async () => {
+        const res1 = await app.handle({
+            req: new Request("http://a.co/projects/123/todos?trackId=abc", {
                 method: "POST",
                 body: JSON.stringify({
                     id: "iid",
@@ -258,8 +258,8 @@ describe("class Apertum", () => {
                     "X-Rate-Limit": "20:100",
                     authorization: "iminvalid",
                 },
-            })
-        )
+            }),
+        })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(403)
         expect(await res1.json()).toEqual({ detail: "Invalid Authentication" })

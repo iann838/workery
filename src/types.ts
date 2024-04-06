@@ -18,11 +18,6 @@ export type ResponseClass = new (body: any, init?: ResponseInit) => Response
 
 export type Next = () => Promise<Response>
 
-export interface ExecutionContext {
-    waitUntil(promise: Promise<unknown>): void
-    passThroughOnException(): void
-}
-
 export type Preprocessor = <Out = any, In = any>(value: In) => Out | In
 
 export interface RouteParameterOptions {
@@ -75,12 +70,12 @@ export type BodyParameter<S extends z.ZodType> = RouteParameter<S> & {
 }
 export type DependsParameter<S extends z.ZodType> = RouteParameter<S> & {
     location: "$depends"
-    dependency: Dependency<any, RouteParameters<any>, any>
+    dependency: Dependency<any, RouteParameters, any>
 }
 
-export type RouteParameters<E = undefined> = {
+export type RouteParameters = {
     [k: string]: RouteParameter<z.ZodType>
-} & (E extends undefined ? { req?: never } : { req?: never; env?: never; ctx?: never })
+} & { req?: never }
 
 export type TypeOf<T> =
     T extends RouteParameter<infer S extends z.ZodType>
@@ -91,11 +86,9 @@ export type TypeOf<T> =
             ? R
             : unknown
 
-export type ArgsOf<Ps extends RouteParameters<E>, E = undefined> = E extends undefined
-    ? { req: Request } & { [K in keyof Ps]: TypeOf<Ps[K]> }
-    : { req: Request; env: E; ctx?: ExecutionContext } & {
-          [K in keyof Ps]: TypeOf<Ps[K]>
-      }
+export type ArgsOf<Ps extends RouteParameters, G = {}> = { req: Request } & G & {
+        [K in keyof Ps]: TypeOf<Ps[K]>
+    }
 
 export type InitOf<C extends abstract new (...args: any) => any> = C extends new (
     init: infer I extends { [k: string]: any }
@@ -103,24 +96,20 @@ export type InitOf<C extends abstract new (...args: any) => any> = C extends new
     ? I
     : never
 
-export type ExceptionHandler<E = undefined> =
-    | ((args: ArgsOf<{}, E>, e: any) => Promise<Response>)
-    | ((args: ArgsOf<{}, E>, e: any) => Response)
+export type ExceptionHandler<G = {}> =
+    | ((args: ArgsOf<{}, G>, e: any) => Promise<Response>)
+    | ((args: ArgsOf<{}, G>, e: any) => Response)
 
-export type RouteHandler<R, Ps extends RouteParameters<E>, E = undefined> =
-    | ((args: ArgsOf<Ps, E>) => Promise<R>)
-    | ((args: ArgsOf<Ps, E>) => R)
+export type RouteHandler<R, Ps extends RouteParameters, G = {}> =
+    | ((args: ArgsOf<Ps, G>) => Promise<R>)
+    | ((args: ArgsOf<Ps, G>) => R)
 
-export type MiddlewareHandler<E = undefined> =
-    | ((args: ArgsOf<{}, E>, next: Next) => Promise<Response>)
-    | ((args: ArgsOf<{}, E>, next: Next) => Response)
+export type MiddlewareHandler<G = {}> =
+    | ((args: ArgsOf<{}, G>, next: Next) => Promise<Response>)
+    | ((args: ArgsOf<{}, G>, next: Next) => Response)
 
-export type FetchParameters<E = undefined> = E extends undefined
-    ? [Request]
-    : [Request, E, ExecutionContext?]
-
-export type HeadlessRoute<R, Ps extends RouteParameters<E>, E> = Omit<
-    InitOf<typeof Route<R, Ps, E>>,
+export type HeadlessRoute<R, Ps extends RouteParameters, G> = Omit<
+    InitOf<typeof Route<R, Ps, G>>,
     "method" | "path"
 >
 
@@ -130,8 +119,8 @@ export interface ParseArgsError {
     issues: z.ZodIssue[]
 }
 
-export interface ParseArgsInfo<Ps extends RouteParameters<E>, E = undefined> {
+export interface ParseArgsInfo<Ps extends RouteParameters, G = {}> {
     success: boolean
     errors: ParseArgsError[]
-    args: ArgsOf<Ps, E>
+    args: ArgsOf<Ps, G>
 }

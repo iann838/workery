@@ -2,26 +2,73 @@
     "name": "apertum",
     "version": "1.0.0-alpha.1",
     "description": "Apertum router, openapi based, fast to code, fully typed.",
-    "main": "./dist/index.js",
-    "module": "./dist/index.mjs",
-    "types": "./dist/src/index.d.ts",
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
     "engines": {
         "node": ">=18.0.0"
     },
     "exports": {
         ".": {
-            "types": "./dist/src/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.js"
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs",
+            "types": "./dist/index.d.ts"
+        },
+        "./adapters": {
+            "import": "./dist/adapters.js",
+            "require": "./dist/adapters.cjs",
+            "types": "./dist/adapters.d.ts"
+        },
+        "./applications": {
+            "import": "./dist/applications.js",
+            "require": "./dist/applications.cjs",
+            "types": "./dist/applications.d.ts"
+        },
+        "./dependencies": {
+            "import": "./dist/dependencies.js",
+            "require": "./dist/dependencies.cjs",
+            "types": "./dist/dependencies.d.ts"
+        },
+        "./helpers": {
+            "import": "./dist/helpers.js",
+            "require": "./dist/helpers.cjs",
+            "types": "./dist/helpers.d.ts"
+        },
+        "./middleware": {
+            "import": "./dist/middleware.js",
+            "require": "./dist/middleware.cjs",
+            "types": "./dist/middleware.d.ts"
+        },
+        "./parameters": {
+            "import": "./dist/parameters.js",
+            "require": "./dist/parameters.cjs",
+            "types": "./dist/parameters.d.ts"
+        },
+        "./renderers": {
+            "import": "./dist/renderers.js",
+            "require": "./dist/renderers.cjs",
+            "types": "./dist/renderers.d.ts"
+        },
+        "./responses": {
+            "import": "./dist/responses.js",
+            "require": "./dist/responses.cjs",
+            "types": "./dist/responses.d.ts"
+        },
+        "./routing": {
+            "import": "./dist/routing.js",
+            "require": "./dist/routing.cjs",
+            "types": "./dist/routing.d.ts"
+        },
+        "./types": {
+            "types": "./dist/types.d.ts"
         }
     },
     "files": [
-        "dist",
-        "LICENSE",
-        "README.md"
+        "dist"
     ],
     "scripts": {
-        "build": "rollup -c",
+        "build": "rimraf dist && rollup -c && npm pack --dry-run",
         "package": "npm run build && npm pack",
         "prettify": "prettier --check src README.md || (prettier -w src README.md)",
         "prepare": "husky install",
@@ -32,27 +79,27 @@
         "access": "public"
     },
     "keywords": [
-        "worker",
+        "apertum",
+        "web",
+        "app",
+        "http",
+        "application",
+        "framework",
+        "router",
         "workers",
         "serverless",
-        "cloudflare workers",
-        "router",
+        "cloudflare",
         "openapi",
         "swagger",
-        "openapi generator",
-        "cf",
-        "optional",
+        "openapi",
+        "oas3.1",
         "middleware",
         "parameters",
         "typescript",
-        "npm",
-        "package",
-        "cjs",
-        "esm",
-        "umd",
+        "nodejs",
         "typed"
     ],
-    "author": "iann838dev@gmail.com",
+    "author": "Jian Huang <iann838dev@gmail.com> (https://github.com/iann838)",
     "license": "MIT",
     "homepage": "https://github.com/iann838/apertum",
     "repository": {
@@ -73,9 +120,8 @@
         "jest": "^29.0.0",
         "jest-openapi": "^0.14.2",
         "prettier": "^3.1.0",
+        "rimraf": "^5.0.5",
         "rollup": "^3.25.1",
-        "rollup-plugin-bundle-size": "^1.0.3",
-        "rollup-plugin-copy": "^3.4.0",
         "ts-jest": "^29.1.0",
         "typescript": "^5.1.3"
     },

@@ -1,6 +1,7 @@
 import { z } from "zod"
-import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi"
+import { extendZodWithOpenApi, ResponseConfig } from "@asteasolutions/zod-to-openapi"
 import type { Dependency } from "./dependencies"
+import { isJsonCoercible, jsonCoerce } from "./helpers"
 import type {
     BodyParameter,
     CookieParameter,
@@ -13,38 +14,12 @@ import type {
     ArgsOf,
     ParseArgsInfo,
     ParseArgsError,
+    RespondsOptions,
     ZodBodyable,
 } from "./types"
 
 if (z.string().openapi === undefined) {
     extendZodWithOpenApi(z)
-}
-
-export function JSONCoerce<Out = unknown>(value: string): Out | string
-export function JSONCoerce<Out = unknown>(value: string[]): Out[] | string[]
-export function JSONCoerce<Out = unknown>(
-    value: string | string[]
-): Out | Out[] | string | string[] {
-    try {
-        if (value instanceof Array) {
-            return value.map((item: string) => JSON.parse(item))
-        }
-        return JSON.parse(value)
-    } catch (e) {
-        return value
-    }
-}
-
-export function isJSONCoercible(schema: z.ZodType): boolean {
-    return (
-        schema instanceof z.ZodNumber ||
-        schema instanceof z.ZodBoolean ||
-        (schema instanceof z.ZodArray && isJSONCoercible(schema._def.type)) ||
-        (schema instanceof z.ZodOptional && isJSONCoercible(schema._def.innerType)) ||
-        (schema instanceof z.ZodDefault && isJSONCoercible(schema._def.innerType)) ||
-        (schema instanceof z.ZodNativeEnum &&
-            !!Object.values(schema._def.values).find((v) => String(v) !== v))
-    )
 }
 
 export function Path(): PathParameter<z.ZodString>
@@ -61,7 +36,7 @@ export function Path(
         schema: schema,
         options: {
             includeInSchema: true,
-            preprocessor: isJSONCoercible(schema) ? JSONCoerce : undefined,
+            preprocessor: isJsonCoercible(schema) ? jsonCoerce : undefined,
             ...options,
         },
     }
@@ -81,7 +56,7 @@ export function Query(
         schema: schema,
         options: {
             includeInSchema: true,
-            preprocessor: isJSONCoercible(schema) ? JSONCoerce : undefined,
+            preprocessor: isJsonCoercible(schema) ? jsonCoerce : undefined,
             ...options,
         },
     }
@@ -101,7 +76,7 @@ export function Header(
         schema: schema,
         options: {
             includeInSchema: true,
-            preprocessor: isJSONCoercible(schema) ? JSONCoerce : undefined,
+            preprocessor: isJsonCoercible(schema) ? jsonCoerce : undefined,
             ...options,
         },
     }
@@ -121,7 +96,7 @@ export function Cookie(
         schema: schema,
         options: {
             includeInSchema: true,
-            preprocessor: isJSONCoercible(schema) ? JSONCoerce : undefined,
+            preprocessor: isJsonCoercible(schema) ? jsonCoerce : undefined,
             ...options,
         },
     }
@@ -168,15 +143,15 @@ export function Depends<R>(dependency: Dependency<R, any, any>): DependsParamete
     }
 }
 
-export async function parseArgs<Ps extends RouteParameters<E>, E = undefined>(
+export async function parseArgs<Ps extends RouteParameters, G = {}>(
     parameters: Ps,
-    baseArgs: ArgsOf<{}, E>,
+    baseArgs: ArgsOf<{}, G>,
     rawParameters?: {
         params?: Record<string, string>
         queries?: Record<string, string[]>
         cookies?: Record<string, string>
     }
-): Promise<ParseArgsInfo<Ps, E>> {
+): Promise<ParseArgsInfo<Ps, G>> {
     const { req } = baseArgs
     const { params, queries, cookies } = rawParameters ?? {}
 
@@ -241,7 +216,7 @@ export async function parseArgs<Ps extends RouteParameters<E>, E = undefined>(
             )
             success &&= dependencyParseInfo.success
             if (dependencyParseInfo.success)
-                args[name] = await parameter.dependency.handler(dependencyParseInfo.args)
+                args[name] = await parameter.dependency.handle(dependencyParseInfo.args)
             else errors.push(...dependencyParseInfo.errors)
             continue
         }
@@ -256,5 +231,34 @@ export async function parseArgs<Ps extends RouteParameters<E>, E = undefined>(
             })
         }
     }
-    return { success, errors, args: args as ArgsOf<Ps, E> }
+    return { success, errors, args: args as ArgsOf<Ps, G> }
+}
+
+export function Responds(): ResponseConfig
+export function Responds(schema: typeof String, options?: RespondsOptions): ResponseConfig
+export function Responds(schema: typeof Blob, options?: RespondsOptions): ResponseConfig
+export function Responds(schema: typeof ReadableStream, options?: RespondsOptions): ResponseConfig
+export function Responds(schema: z.ZodType, options?: RespondsOptions): ResponseConfig
+export function Responds(schema: ZodBodyable = String, options?: RespondsOptions): ResponseConfig {
+    if (schema instanceof z.ZodType) {
+        return {
+            description: options?.description ?? schema._def.openapi?.metadata?.description ?? "",
+            headers: z.object(options?.headers ?? {}),
+            content: {
+                [options?.mediaType ?? "application/json"]: {
+                    schema: schema,
+                },
+            },
+        }
+    }
+    return {
+        description: options?.description ?? "",
+        headers: z.object(options?.headers ?? {}),
+        content: {
+            [options?.mediaType ?? "application/json"]: {
+                schema:
+                    schema === String ? { type: "string" } : { type: "string", format: "binary" },
+            },
+        },
+    }
 }

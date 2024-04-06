@@ -16,10 +16,10 @@ describe("class Route", () => {
             method: "GET",
             path: "path/to/route",
             parameters: {},
-            handler: nullHandler,
+            handle: nullHandler,
         })
         expect(route.path).toBe("/path/to/route")
-        expect(route.handler).toBe(nullHandler)
+        expect(route.handle).toBe(nullHandler)
         expect(route.parameters).toStrictEqual({})
     })
 })
@@ -62,7 +62,7 @@ describe("class Router", () => {
             method: "GET",
             path: "/path/to/route",
             parameters: {},
-            handler: nullHandler,
+            handle: nullHandler,
         })
         router.push(route)
         const [routeOut, params] = router.match("GET", "/path/to/route")
@@ -76,7 +76,7 @@ describe("class Router", () => {
             method: "GET",
             path: "/path/{to}/route/{target}",
             parameters: {},
-            handler: nullHandler,
+            handle: nullHandler,
         })
         router.push(route)
         const [routeOut, params] = router.match("GET", "/path/123/route/abc")
@@ -89,37 +89,37 @@ describe("class Router", () => {
         method: "GET",
         path: "/path/to/route",
         parameters: {},
-        handler: nullHandler,
+        handle: nullHandler,
     })
     const route2 = new Route({
         method: "GET",
         path: "/path/{to}/route/{target}",
         parameters: {},
-        handler: nullHandler,
+        handle: nullHandler,
     })
     const route3 = new Route({
         method: "POST",
         path: "/path/{to}/route/{target}",
         parameters: {},
-        handler: nullHandler,
+        handle: nullHandler,
     })
     const route4 = new Route({
         method: "GET",
         path: "/another/to/route",
         parameters: {},
-        handler: nullHandler,
+        handle: nullHandler,
     })
     const route5 = new Route({
         method: "GET",
         path: "/path/{to}/route/{target}/action",
         parameters: {},
-        handler: nullHandler,
+        handle: nullHandler,
     })
     const route6 = new Route({
         method: "PUT",
         path: "/path/{to}/route/{target}/action",
         parameters: {},
-        handler: nullHandler,
+        handle: nullHandler,
     })
     router.push(route1)
     router.push(route2)
@@ -159,5 +159,12 @@ describe("class Router", () => {
         expect(routeOut7).toBeUndefined()
         expect(routeOut8).toBeUndefined()
         expect(routeOut9).toBeUndefined()
+    })
+
+    test("[method] match: return value method not allowed", () => {
+        const [routeOut1] = router.match("POST", "/path/to/route")
+        const [routeOut3] = router.match("DELETE", "/path/ab/route/123")
+        expect(routeOut1).toBeNull()
+        expect(routeOut3).toBeNull()
     })
 })

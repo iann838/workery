@@ -1,21 +1,21 @@
 import type { Apertum } from "./applications"
 import type { RouteHandler, RouteParameters } from "./types"
 
-export class Dependency<R, Ps extends RouteParameters<E>, E = undefined> {
-    envOf?: Apertum<E>
+export class Dependency<R, Ps extends RouteParameters, G = {}> {
+    of?: Apertum<G>
     name?: string
     parameters: Ps
-    handler: RouteHandler<R, Ps, E>
+    handle: RouteHandler<R, Ps, G>
 
     constructor(init: {
-        envOf?: Apertum<E>
+        of?: Apertum<G>
         name?: string
         parameters: Ps
-        handler: RouteHandler<R, Ps, E>
+        handle: RouteHandler<R, Ps, G>
     }) {
-        this.envOf = init.envOf
+        this.of = init.of
         this.name = init.name
         this.parameters = init.parameters
-        this.handler = init.handler
+        this.handle = init.handle
     }
 }

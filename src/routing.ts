@@ -17,7 +17,7 @@ export function fixPathSlashes(path: string) {
     return path
 }
 
-export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
+export class Route<R, Ps extends RouteParameters, G = {}> {
     method: HTTPMethod
     path: string
     name?: string
@@ -31,7 +31,7 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
     includeInSchema: boolean
     responseClass: ResponseClass
     parameters: Ps
-    handler: RouteHandler<R, Ps, E>
+    handle: RouteHandler<R, Ps, G>
 
     constructor(init: {
         method: HTTPMethod
@@ -47,7 +47,7 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
         statusCode?: number
         responseClass?: ResponseClass
         parameters: Ps
-        handler: RouteHandler<R, Ps, E>
+        handle: RouteHandler<R, Ps, G>
     }) {
         this.method = init.method
         this.path = fixPathSlashes(init.path)
@@ -62,12 +62,12 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
         this.statusCode = init.statusCode ?? 200
         this.responseClass = init.responseClass ?? JSONResponse
         this.parameters = init.parameters
-        this.handler = init.handler
+        this.handle = init.handle
     }
 
     openapi(): RouteConfig {
-        const flatParameters: RouteParameters<E> = {}
-        const flattenParameters = (parameters: RouteParameters<E>) => {
+        const flatParameters: RouteParameters = {}
+        const flattenParameters = (parameters: RouteParameters) => {
             for (const [name, parameter] of Object.entries(parameters)) {
                 if (parameter.location == "$depends")
                     flattenParameters(parameter.dependency!.parameters)
@@ -136,25 +136,25 @@ export class Route<R, Ps extends RouteParameters<E>, E = undefined> {
     }
 }
 
-export class RouteNode<E = undefined> {
-    private inner: Record<string, RouteNode<E>>
+export class RouteNode<G = {}> {
+    private inner: Record<string, RouteNode<G>>
     name: string
-    route?: Route<any, any, E>
+    routes: Record<string, Route<any, any, G>>
     paramNames: string[]
 
     constructor(name: string) {
         this.inner = {}
         this.name = name
-        this.route = undefined
+        this.routes = {}
         this.paramNames = []
     }
 
-    touch(node: string): RouteNode<E> {
+    touch(node: string): RouteNode<G> {
         this.inner[node] ||= new RouteNode(node)
         return this.inner[node]!
     }
 
-    match(node: string): RouteNode<E> | undefined {
+    match(node: string): RouteNode<G> | undefined {
         return this.inner[node] ?? this.inner["{}"]
     }
 }
@@ -168,16 +168,16 @@ export function searchParamsToQueries(searchParams: URLSearchParams): Record<str
     return queries
 }
 
-export class Router<E = undefined> {
-    routes: Route<any, any, E>[]
-    private matcher: RouteNode<E>
+export class Router<G = {}> {
+    routes: Route<any, any, G>[]
+    private matcher: RouteNode<G>
 
     constructor() {
         this.routes = []
         this.matcher = new RouteNode("")
     }
 
-    *[Symbol.iterator](): IterableIterator<Route<any, any, E>> {
+    *[Symbol.iterator](): IterableIterator<Route<any, any, G>> {
         for (const route of this.routes) {
             yield route
         }
@@ -187,21 +187,21 @@ export class Router<E = undefined> {
         return this.routes.length
     }
 
-    push(...routes: Route<any, any, E>[]): number {
+    push(...routes: Route<any, any, G>[]): number {
         for (const route of routes) {
             this.routes.push(route)
             const nodes = route.path.split("/")
-            nodes[0] = route.method
             let matcher = this.matcher
             const paramNames = []
             for (let [index, node] of nodes.entries()) {
+                if (index == 0) continue
                 if (node[0] == "{" && node[node.length - 1] == "}") {
                     paramNames.push(node.slice(1, -1))
                     node = "{}"
                 }
                 matcher = matcher.touch(node)
                 if (index == nodes.length - 1) {
-                    matcher.route = route
+                    matcher.routes[route.method] = route
                     matcher.paramNames = paramNames
                 }
             }
@@ -209,23 +209,29 @@ export class Router<E = undefined> {
         return this.length
     }
 
-    match(method: string, path: string): [Route<any, any, E> | undefined, Record<string, string>] {
+    match(
+        method: string,
+        path: string
+    ): [Route<any, any, G> | undefined | null, Record<string, string>] {
         const nodes = fixPathSlashes(path).split("/")
         const paramValues: string[] = []
-        nodes[0] = method
         let matcher = this.matcher
         for (const [index, node] of nodes.entries()) {
+            if (index == 0) continue
             let nextMatcher = matcher.match(node)
             if (!nextMatcher) return [undefined, {}]
             matcher = nextMatcher
             if (matcher.name == "{}") paramValues.push(node)
             if (index == nodes.length - 1) {
-                if (!matcher.route) return [undefined, {}]
+                if (!matcher.routes[method]) {
+                    if (Object.keys(matcher.routes).length == 0) return [undefined, {}]
+                    return [null, {}]
+                }
                 const params: Record<string, string> = {}
                 for (let i = 0; i < matcher.paramNames.length; i++) {
                     params[matcher.paramNames[i]] = paramValues[i]
                 }
-                return [matcher.route, params]
+                return [matcher.routes[method], params]
             }
         }
         return [undefined, {}]

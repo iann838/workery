@@ -3,17 +3,17 @@ import { Dependency } from "./dependencies"
 import { Query } from "./parameters"
 
 describe("class Dependency", () => {
-    test("[constructor]: mutation and handler return value", () => {
+    test("[constructor]: mutation and handle return value", () => {
         const dependency = new Dependency({
             name: "sampleDependency",
             parameters: {
                 key: Query(z.number()),
             },
-            handler: ({ key }) => key,
+            handle: ({ key }) => key,
         })
         expect(dependency.name).toBe("sampleDependency")
         expect(
-            dependency.handler({
+            dependency.handle({
                 req: new Request("https://page.com/path"),
                 key: 2,
             })

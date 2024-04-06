@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { HTMLResponse, JSONResponse, PlainTextResponse, Responds } from "./responses"
+import { HTMLResponse, JSONResponse, PlainTextResponse } from "./responses"
 
 describe("class JSONResponse", () => {
     test("[constructor]: operational equality to Response.json", async () => {
@@ -41,14 +41,5 @@ describe("class PlainTextResponse", () => {
         expect([...new PlainTextResponse(testData).headers.entries()]).toStrictEqual([
             ["content-type", "text/plain;charset=utf-8"],
         ])
-    })
-})
-
-describe("function Responds", () => {
-    test("[invocation]: return value simple", () => {
-        expect(Responds(z.object({})).content).toBeTruthy()
-        expect(Responds(ReadableStream).content).toBeTruthy()
-        expect(Responds(Blob).content).toBeTruthy()
-        expect(Responds(String).content).toBeTruthy()
     })
 })

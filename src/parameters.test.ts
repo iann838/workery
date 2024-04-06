@@ -1,73 +1,7 @@
 import { z } from "zod"
-import {
-    Body,
-    Cookie,
-    Depends,
-    Header,
-    JSONCoerce,
-    Path,
-    Query,
-    isJSONCoercible,
-    parseArgs,
-} from "./parameters"
 import { Dependency } from "./dependencies"
-
-describe("function JSONCoerce", () => {
-    test("[invocation]: return value", () => {
-        expect(JSONCoerce<number>("12")).toBe(12)
-        expect(JSONCoerce<boolean>("true")).toBe(true)
-        expect(JSONCoerce<boolean>("false")).toBe(false)
-        expect(JSONCoerce<string>("text")).toBe("text")
-        expect(JSONCoerce<number[]>(["1", "23"])).toStrictEqual([1, 23])
-        expect(JSONCoerce<boolean[]>(["true", "false"])).toStrictEqual([true, false])
-        expect(JSONCoerce<string[]>(["something", "else"])).toStrictEqual(["something", "else"])
-    })
-})
-
-describe("function isJSONCoercible", () => {
-    test("[invocation]: return value zod number", () => {
-        expect(isJSONCoercible(z.number())).toBe(true)
-        expect(isJSONCoercible(z.number().max(256))).toBe(true)
-        expect(isJSONCoercible(z.number().optional())).toBe(true)
-        expect(isJSONCoercible(z.number().default(1))).toBe(true)
-        expect(isJSONCoercible(z.number().array())).toBe(true)
-    })
-
-    test("[invocation]: return value zod boolean", () => {
-        expect(isJSONCoercible(z.boolean())).toBe(true)
-        expect(isJSONCoercible(z.boolean().optional())).toBe(true)
-        expect(isJSONCoercible(z.boolean().default(true))).toBe(true)
-        expect(isJSONCoercible(z.boolean().array())).toBe(true)
-    })
-
-    test("[invocation]: return value zod enum", () => {
-        expect(isJSONCoercible(z.enum(["a", "b"]))).toBe(false)
-        expect(isJSONCoercible(z.enum(["a", "b"]).optional())).toBe(false)
-        expect(isJSONCoercible(z.enum(["a", "b"]).default("a"))).toBe(false)
-        expect(isJSONCoercible(z.enum(["a", "b"]).array())).toBe(false)
-    })
-
-    test("[invocation]: return value zod native enum", () => {
-        expect(isJSONCoercible(z.nativeEnum({ a: 1, b: 2 }))).toBe(true)
-        expect(isJSONCoercible(z.nativeEnum({ a: 1, b: 2 }).optional())).toBe(true)
-        expect(isJSONCoercible(z.nativeEnum({ a: 1, b: 2 }).default(1))).toBe(true)
-        expect(isJSONCoercible(z.nativeEnum({ a: 1, b: 2 }).array())).toBe(true)
-        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: 2 }))).toBe(true)
-        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: 2 }).optional())).toBe(true)
-        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: 2 }).default("1"))).toBe(true)
-        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: 2 }).array())).toBe(true)
-        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: "2" }))).toBe(false)
-        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: "2" }).optional())).toBe(false)
-        expect(isJSONCoercible(z.nativeEnum({ a: "1", b: "2" }).array())).toBe(false)
-    })
-
-    test("[invocation]: return value not coercible", () => {
-        expect(isJSONCoercible(z.string())).toBe(false)
-        expect(isJSONCoercible(z.string().array())).toBe(false)
-        expect(isJSONCoercible(z.bigint().array())).toBe(false)
-        expect(isJSONCoercible(z.object({}))).toBe(false)
-    })
-})
+import { jsonCoerce } from "./helpers"
+import { Body, Cookie, Depends, Header, Path, Query, parseArgs, Responds } from "./parameters"
 
 describe("function Path", () => {
     test("[invocation]: return value", () => {
@@ -75,7 +9,7 @@ describe("function Path", () => {
         const routeParam = Path(schema)
         expect(routeParam.location).toBe("path")
         expect(routeParam.schema).toBe(schema)
-        expect(routeParam.options.preprocessor).toBe(JSONCoerce)
+        expect(routeParam.options.preprocessor).toBe(jsonCoerce)
     })
 })
 
@@ -85,7 +19,7 @@ describe("function Query", () => {
         const routeParam = Query(schema)
         expect(routeParam.location).toBe("query")
         expect(routeParam.schema).toBe(schema)
-        expect(routeParam.options.preprocessor).toBe(JSONCoerce)
+        expect(routeParam.options.preprocessor).toBe(jsonCoerce)
     })
 })
 
@@ -125,7 +59,7 @@ describe("function Depends", () => {
             parameters: {
                 key: Query(z.string()),
             },
-            handler: ({ key }) => key,
+            handle: ({ key }) => key,
         })
         const routeParam = Depends(dependency)
         expect(routeParam.location).toBe("$depends")
@@ -309,7 +243,7 @@ describe("function parseArgs", () => {
                 p_Header: Header(z.string()),
                 pCookie: Cookie(z.string(), { altName: "pAltCookie" }),
             },
-            handler: ({ p_Header, pCookie }) => p_Header + pCookie,
+            handle: ({ p_Header, pCookie }) => p_Header + pCookie,
         })
         const parseInfo1 = await parseArgs(
             {
@@ -387,7 +321,7 @@ describe("function parseArgs", () => {
                 p_Header: Header(z.string().startsWith("notgonnapass")),
                 pCookie: Cookie(z.string(), { altName: "pAltCookie" }),
             },
-            handler: ({ p_Header, pCookie }) => p_Header + pCookie,
+            handle: ({ p_Header, pCookie }) => p_Header + pCookie,
         })
         const parseInfo1 = await parseArgs(
             {
@@ -430,5 +364,14 @@ describe("function parseArgs", () => {
         )
         expect(parseInfo1.errors.length).toBe(1)
         expect(parseInfo1.success).toBe(false)
+    })
+})
+
+describe("function Responds", () => {
+    test("[invocation]: return value simple", () => {
+        expect(Responds(z.object({})).content).toBeTruthy()
+        expect(Responds(ReadableStream).content).toBeTruthy()
+        expect(Responds(Blob).content).toBeTruthy()
+        expect(Responds(String).content).toBeTruthy()
     })
 })

@@ -1,4 +1,4 @@
-export function SwaggerTemplate(
+export function renderSwagger(
     url: string,
     options?: {
         title?: string
@@ -59,7 +59,7 @@ export function SwaggerTemplate(
     `
 }
 
-export function RedocTemplate(
+export function renderRedoc(
     url: string,
     options?: {
         title?: string

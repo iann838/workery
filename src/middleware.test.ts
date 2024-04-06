@@ -4,15 +4,15 @@ import type { Next } from "./types"
 
 describe("class Middleware", () => {
     test("[constructor]: mutation", () => {
-        const handler = async ({}, next: Next) => {
+        const handle = async ({}, next: Next) => {
             return await next()
         }
         const middleware = new Middleware({
             name: "mymiddleware",
-            handler: handler,
+            handle: handle,
         })
         expect(middleware.name).toBe("mymiddleware")
-        expect(middleware.handler).toBe(handler)
+        expect(middleware.handle).toBe(handle)
     })
 })
 
@@ -29,8 +29,8 @@ describe("function CORSMiddleware", () => {
     })
     const next = async () => new Response("sample")
 
-    test("[invocation]: handler return value success", async () => {
-        const response1 = await middleware.handler(
+    test("[invocation]: handle return value success", async () => {
+        const response1 = await middleware.handle(
             {
                 req: new Request("http://127.0.0.1:8000/path", {
                     headers: { Origin: "http://127.0.0.1:8000" },
@@ -41,7 +41,7 @@ describe("function CORSMiddleware", () => {
         expect(response1.status).toBe(200)
         expect(response1.headers.get("Access-Control-Allow-Origin")).toBe("http://127.0.0.1:8000")
 
-        const response4 = await middleware.handler(
+        const response4 = await middleware.handle(
             {
                 req: new Request("https://page.com/path", {
                     headers: { Origin: "https://page.com" },
@@ -52,7 +52,7 @@ describe("function CORSMiddleware", () => {
         expect(response4.status).toBe(200)
         expect(response4.headers.get("Access-Control-Allow-Origin")).toBe("https://page.com")
 
-        const response5 = await middleware.handler(
+        const response5 = await middleware.handle(
             {
                 req: new Request("https://page.com/path", {
                     method: "OPTIONS",
@@ -65,8 +65,8 @@ describe("function CORSMiddleware", () => {
         expect(response5.headers.get("Access-Control-Allow-Origin")).toBe("https://page.com")
     })
 
-    test("[invocation]: handler return value fail", async () => {
-        const response2 = await middleware.handler(
+    test("[invocation]: handle return value fail", async () => {
+        const response2 = await middleware.handle(
             {
                 req: new Request("http://127.0.0.1:8800/path", {
                     headers: { Origin: "http://127.0.0.1:8800" },
@@ -79,7 +79,7 @@ describe("function CORSMiddleware", () => {
             "http://127.0.0.1:8800"
         )
 
-        const response3 = await middleware.handler(
+        const response3 = await middleware.handle(
             {
                 req: new Request("https://google.com/path", {
                     headers: { Origin: "https://google.com" },
@@ -90,7 +90,7 @@ describe("function CORSMiddleware", () => {
         expect(response3.status).toBe(200)
         expect(response3.headers.get("Access-Control-Allow-Origin")).not.toBe("https://google.com")
 
-        const response6 = await middleware.handler(
+        const response6 = await middleware.handle(
             {
                 req: new Request("https://google.com/path", {
                     method: "OPTIONS",
@@ -110,15 +110,15 @@ describe("function CompressMiddleware", () => {
         expect(middleware.name).toBe("CompressMiddleware")
     })
 
-    test("[invocation]: handler return value", async () => {
+    test("[invocation]: handle return value", async () => {
         const middleware = CompressMiddleware("gzip")
         const data = { data: [1, 23] }
         const next = async () => new JSONResponse(data)
-        const response1 = await middleware.handler(
+        const response1 = await middleware.handle(
             { req: new Request("https://page.com/path") },
             next
         )
-        const response2 = await middleware.handler(
+        const response2 = await middleware.handle(
             {
                 req: new Request("https://page.com/path", {
                     headers: { "Accept-Encoding": "gzip" },

@@ -1,15 +1,15 @@
 import type { Apertum } from "./applications"
 import type { MiddlewareHandler } from "./types"
 
-export class Middleware<E = undefined> {
-    envOf?: Apertum<E>
+export class Middleware<G = {}> {
+    of?: Apertum<G>
     name?: string
-    handler: MiddlewareHandler<E>
+    handle: MiddlewareHandler<G>
 
-    constructor(init: { envOf?: Apertum<E>; name?: string; handler: MiddlewareHandler<E> }) {
-        this.envOf = init.envOf
+    constructor(init: { of?: Apertum<G>; name?: string; handle: MiddlewareHandler<G> }) {
+        this.of = init.of
         this.name = init.name
-        this.handler = init.handler
+        this.handle = init.handle
     }
 }
 
@@ -44,7 +44,7 @@ export const CORSMiddleware = (options?: {
 
     return new Middleware({
         name: "CORSMiddleware",
-        handler: async ({ req }, next) => {
+        handle: async ({ req }, next) => {
             const resHeaders = new Headers()
 
             const allowOrigin = findAllowOrigin(req.headers.get("origin") ?? "")
@@ -105,7 +105,7 @@ export const CORSMiddleware = (options?: {
 export const CompressMiddleware = (format: CompressionFormat) => {
     return new Middleware({
         name: "CompressMiddleware",
-        handler: async ({ req }, next) => {
+        handle: async ({ req }, next) => {
             let response = await next()
             const accepted = req.headers.get("Accept-Encoding")
             if (!accepted?.includes(format) || !response.body) {
