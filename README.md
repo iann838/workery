@@ -103,10 +103,10 @@ You can write your own adapter using the `app.handle` method, for details, check
 
 ## Handlers
 
--   Handlers by default provides the `req` argument, `env` and `ctx` arguments typings are available if Apertum was instantiated with an env generic:
+-   Handlers by default provides the `req` argument, extra argument typings are available if Apertum was instantiated with a `G` generic:
 
 ```ts
-const app = new Apertum<{ VARIABLE: string }>({})
+const app = new Apertum<{ env: { VARIABLE: string }, ctx: ExecutionContext }>({})
 ```
 
 -   All arguments typings defined on `parameters` will be available.
