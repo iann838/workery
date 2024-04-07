@@ -1,17 +1,18 @@
 import { z } from "zod"
 import { Dependency } from "./dependencies"
-import { jsonCoerce } from "./helpers"
+import { createResolveLater, jsonCoerce } from "./helpers"
 import { Body, Cookie, Depends, Header, Path, Query, parseArgs, Responds } from "./parameters"
 
-describe("function Path", () => {
-    test("[invocation]: return value", () => {
-        const schema = z.number()
-        const routeParam = Path(schema)
-        expect(routeParam.location).toBe("path")
-        expect(routeParam.schema).toBe(schema)
-        expect(routeParam.options.preprocessor).toBe(jsonCoerce)
+const nullLater = () =>
+    void describe("function Path", () => {
+        test("[invocation]: return value", () => {
+            const schema = z.number()
+            const routeParam = Path(schema)
+            expect(routeParam.location).toBe("path")
+            expect(routeParam.schema).toBe(schema)
+            expect(routeParam.options.preprocessor).toBe(jsonCoerce)
+        })
     })
-})
 
 describe("function Query", () => {
     test("[invocation]: return value", () => {
@@ -69,7 +70,13 @@ describe("function Depends", () => {
 
 describe("function parseArgs", () => {
     test("[invocation]: return value success empty", async () => {
-        const parseInfo1 = await parseArgs({}, { req: new Request("http://a.co/notimportant") })
+        const parseInfo1 = await parseArgs(
+            {},
+            {
+                baseArgs: { req: new Request("http://a.co/notimportant") },
+                later: nullLater,
+            }
+        )
         expect(parseInfo1.errors).toStrictEqual([])
         expect(parseInfo1.args).toStrictEqual({})
         expect(parseInfo1.success).toBe(true)
@@ -89,21 +96,24 @@ describe("function parseArgs", () => {
                 pBody: Body(z.object({ key: z.string(), value: z.number() })),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    headers: { "P-Header": "htext" },
-                    body: JSON.stringify({ key: "mykey", value: 12 }),
-                }),
-            },
-            {
-                params: { pPath: "23", pPathEnum: "blue" },
-                queries: {
-                    pQuery: ["true"],
-                    pQueryNenum: ["200"],
-                    pQueryArr: ["5", "9"],
-                    pQueryArrNenum: ["200", "500"],
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        headers: { "P-Header": "htext" },
+                        body: JSON.stringify({ key: "mykey", value: 12 }),
+                    }),
                 },
-                cookies: { pAltCookie: "ctext" },
+                later: nullLater,
+                rawParameters: {
+                    params: { pPath: "23", pPathEnum: "blue" },
+                    queries: {
+                        pQuery: ["true"],
+                        pQueryNenum: ["200"],
+                        pQueryArr: ["5", "9"],
+                        pQueryArrNenum: ["200", "500"],
+                    },
+                    cookies: { pAltCookie: "ctext" },
+                },
             }
         )
         expect(parseInfo1.errors).toStrictEqual([])
@@ -127,10 +137,13 @@ describe("function parseArgs", () => {
                 pBody: Body(z.object({ key: z.string(), value: z.number() })),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: JSON.stringify({ key: "mykey", value: 12 }),
-                }),
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: JSON.stringify({ key: "mykey", value: 12 }),
+                    }),
+                },
+                later: nullLater,
             }
         )
         expect(parseInfo1.errors).toStrictEqual([])
@@ -146,10 +159,13 @@ describe("function parseArgs", () => {
                 pBody: Body(String),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: "mysampletext",
-                }),
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: "mysampletext",
+                    }),
+                },
+                later: nullLater,
             }
         )
         expect(parseInfo1.errors).toStrictEqual([])
@@ -165,10 +181,13 @@ describe("function parseArgs", () => {
                 pBody: Body(Blob),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: "mysampletext",
-                }),
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: "mysampletext",
+                    }),
+                },
+                later: nullLater,
             }
         )
         expect(parseInfo1.errors).toStrictEqual([])
@@ -182,10 +201,13 @@ describe("function parseArgs", () => {
                 pBody: Body(ReadableStream),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: "mysampletext",
-                }),
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: "mysampletext",
+                    }),
+                },
+                later: nullLater,
             }
         )
         expect(parseInfo1.errors).toStrictEqual([])
@@ -200,14 +222,17 @@ describe("function parseArgs", () => {
                 pQuery: Query(z.boolean().optional()),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: JSON.stringify({ key: "mykey", value: 12 }),
-                    headers: { "P-Header": "htext" },
-                }),
-            },
-            {
-                params: { pPath: "23" },
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: JSON.stringify({ key: "mykey", value: 12 }),
+                        headers: { "P-Header": "htext" },
+                    }),
+                },
+                later: nullLater,
+                rawParameters: {
+                    params: { pPath: "23" },
+                },
             }
         )
         expect(parseInfo1.errors).toStrictEqual([])
@@ -222,14 +247,17 @@ describe("function parseArgs", () => {
                 pQuery: Query(z.boolean().default(true)),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: JSON.stringify({ key: "mykey", value: 12 }),
-                    headers: { "P-Header": "htext" },
-                }),
-            },
-            {
-                params: { pPath: "23" },
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: JSON.stringify({ key: "mykey", value: 12 }),
+                        headers: { "P-Header": "htext" },
+                    }),
+                },
+                later: nullLater,
+                rawParameters: {
+                    params: { pPath: "23" },
+                },
             }
         )
         expect(parseInfo1.errors).toStrictEqual([])
@@ -254,16 +282,19 @@ describe("function parseArgs", () => {
                 pDepend: Depends(dependency1),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    headers: { "P-Header": "htext" },
-                    body: JSON.stringify({ key: "mykey", value: 12 }),
-                }),
-            },
-            {
-                params: { pPath: "23" },
-                queries: { pQuery: ["true"], pQueryArr: ["5", "9"] },
-                cookies: { pAltCookie: "ctext" },
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        headers: { "P-Header": "htext" },
+                        body: JSON.stringify({ key: "mykey", value: 12 }),
+                    }),
+                },
+                later: nullLater,
+                rawParameters: {
+                    params: { pPath: "23" },
+                    queries: { pQuery: ["true"], pQueryArr: ["5", "9"] },
+                    cookies: { pAltCookie: "ctext" },
+                },
             }
         )
         expect(parseInfo1.errors).toStrictEqual([])
@@ -277,6 +308,84 @@ describe("function parseArgs", () => {
         expect(parseInfo1.success).toBe(true)
     })
 
+    test("[invocation]: return value success async depended", async () => {
+        const dependency1 = new Dependency({
+            parameters: {
+                p_Header: Header(z.string()),
+                pCookie: Cookie(z.string(), { altName: "pAltCookie" }),
+            },
+            handle: async ({ p_Header, pCookie }) => p_Header + pCookie,
+        })
+        const parseInfo1 = await parseArgs(
+            {
+                pPath: Path(z.number()),
+                pDepend: Depends(dependency1),
+            },
+            {
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        headers: { "P-Header": "htext" },
+                    }),
+                },
+                later: nullLater,
+                rawParameters: {
+                    params: { pPath: "23" },
+                    cookies: { pAltCookie: "ctext" },
+                },
+            }
+        )
+        expect(parseInfo1.errors).toStrictEqual([])
+        expect(parseInfo1.args).toStrictEqual({
+            pPath: 23,
+            pDepend: "htextctext",
+        })
+        expect(parseInfo1.success).toBe(true)
+    })
+
+    test("[invocation]: return value success depended later", async () => {
+        let flag = false
+        const [resolve, later] = createResolveLater()
+        const dependency1 = new Dependency({
+            parameters: {
+                p_Header: Header(z.string()),
+                pCookie: Cookie(z.string(), { altName: "pAltCookie" }),
+            },
+            handle: async ({ p_Header, pCookie }, later) => {
+                later(() => (flag = true))
+                return p_Header + pCookie
+            },
+        })
+        const parseInfo1 = await parseArgs(
+            {
+                pPath: Path(z.number()),
+                pDepend: Depends(dependency1),
+            },
+            {
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        headers: { "P-Header": "htext" },
+                    }),
+                },
+                later: later,
+                rawParameters: {
+                    params: { pPath: "23" },
+                    cookies: { pAltCookie: "ctext" },
+                },
+            }
+        )
+        expect(parseInfo1.errors).toStrictEqual([])
+        expect(parseInfo1.args).toStrictEqual({
+            pPath: 23,
+            pDepend: "htextctext",
+        })
+        expect(parseInfo1.success).toBe(true)
+
+        expect(flag).toBe(false)
+        resolve(new Response(""))
+        await new Promise((r) => setTimeout(r, 10))
+        expect(flag).toBe(true)
+    })
+
     test("[invocation]: return value fail flat", async () => {
         const parseInfo1 = await parseArgs(
             {
@@ -284,13 +393,16 @@ describe("function parseArgs", () => {
                 pBody: Body(z.object({ key: z.string(), value: z.number() })),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: JSON.stringify({ key: "mykey", value: "12" }),
-                }),
-            },
-            {
-                params: { pPath: "23" },
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: JSON.stringify({ key: "mykey", value: "12" }),
+                    }),
+                },
+                later: nullLater,
+                rawParameters: {
+                    params: { pPath: "23" },
+                },
             }
         )
         expect(parseInfo1.errors.length).toBe(1)
@@ -302,13 +414,16 @@ describe("function parseArgs", () => {
                 pBody: Body(z.object({ key: z.string(), value: z.number() })),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: JSON.stringify({ key: "mykey", value: "12" }),
-                }),
-            },
-            {
-                params: { pPath: "abc" },
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: JSON.stringify({ key: "mykey", value: "12" }),
+                    }),
+                },
+                rawParameters: {
+                    params: { pPath: "abc" },
+                },
+                later: nullLater,
             }
         )
         expect(parseInfo2.errors.length).toBe(2)
@@ -330,15 +445,18 @@ describe("function parseArgs", () => {
                 pDepend: Depends(dependency1),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: JSON.stringify({ key: "mykey", value: 12 }),
-                    headers: { "P-Header": "htext" },
-                }),
-            },
-            {
-                params: { pPath: "23" },
-                cookies: { pAltCookie: "ctext" },
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: JSON.stringify({ key: "mykey", value: 12 }),
+                        headers: { "P-Header": "htext" },
+                    }),
+                },
+                rawParameters: {
+                    params: { pPath: "23" },
+                    cookies: { pAltCookie: "ctext" },
+                },
+                later: nullLater,
             }
         )
         expect(parseInfo1.errors.length).toBe(1)
@@ -352,14 +470,17 @@ describe("function parseArgs", () => {
                 pQuery: Query(z.boolean()),
             },
             {
-                req: new Request("http://a.co/notimportant", {
-                    method: "POST",
-                    body: JSON.stringify({ key: "mykey", value: 12 }),
-                    headers: { "P-Header": "htext" },
-                }),
-            },
-            {
-                params: { pPath: "23" },
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: JSON.stringify({ key: "mykey", value: 12 }),
+                        headers: { "P-Header": "htext" },
+                    }),
+                },
+                rawParameters: {
+                    params: { pPath: "23" },
+                },
+                later: nullLater,
             }
         )
         expect(parseInfo1.errors.length).toBe(1)

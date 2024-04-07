@@ -16,6 +16,8 @@ import type {
     ParseArgsError,
     RespondsOptions,
     ZodBodyable,
+    Later,
+    RouteParameter,
 } from "./types"
 
 if (z.string().openapi === undefined) {
@@ -145,80 +147,88 @@ export function Depends<R>(dependency: Dependency<R, any, any>): DependsParamete
 
 export async function parseArgs<Ps extends RouteParameters, G = {}>(
     parameters: Ps,
-    baseArgs: ArgsOf<{}, G>,
-    rawParameters?: {
-        params?: Record<string, string>
-        queries?: Record<string, string[]>
-        cookies?: Record<string, string>
+    input: {
+        baseArgs: ArgsOf<{}, G>
+        rawParameters?: {
+            params?: Record<string, string>
+            queries?: Record<string, string[]>
+            cookies?: Record<string, string>
+        }
+        later: Later
     }
 ): Promise<ParseArgsInfo<Ps, G>> {
-    const { req } = baseArgs
-    const { params, queries, cookies } = rawParameters ?? {}
+    const { req } = input.baseArgs
+    const { params, queries, cookies } = input.rawParameters ?? {}
 
     let success = true
     const args: Record<string, any> = {}
     const errors: ParseArgsError[] = []
 
-    for (const [name, _parameter] of Object.entries(parameters)) {
-        let parseOut!: z.SafeParseSuccess<unknown> | z.SafeParseError<unknown>
-
-        if (_parameter.location == "path") {
+    const parsers = {
+        path: (name: string, _parameter: RouteParameter<z.ZodType>) => {
             const parameter = _parameter as PathParameter<z.ZodType>
             let input = (params ?? {})[parameter.options.altName ?? name]
-            parseOut = parameter.schema.safeParse(
+            return parameter.schema.safeParse(
                 input !== undefined && parameter.options.preprocessor
                     ? parameter.options.preprocessor(input)
                     : input
             )
-        } else if (_parameter.location == "query") {
+        },
+        query: (name: string, _parameter: RouteParameter<z.ZodType>) => {
             const parameter = _parameter as QueryParameter<z.ZodType>
             let input: string[] | string = (queries ?? {})[parameter.options.altName ?? name] ?? []
             if (!(parameter.schema instanceof z.ZodArray)) input = input[0]
-            parseOut = parameter.schema.safeParse(
+            return parameter.schema.safeParse(
                 parameter.options.preprocessor ? parameter.options.preprocessor(input) : input
             )
-        } else if (_parameter.location == "header") {
+        },
+        header: (name: string, _parameter: RouteParameter<z.ZodType>) => {
             const parameter = _parameter as HeaderParameter<z.ZodType>
             let input =
                 req.headers.get(parameter.options.altName ?? name.replace(/_/g, "-")) ?? undefined
-            parseOut = parameter.schema.safeParse(
+            return parameter.schema.safeParse(
                 input !== undefined && parameter.options.preprocessor
                     ? parameter.options.preprocessor(input)
                     : input
             )
-        } else if (_parameter.location == "cookie") {
+        },
+        cookie: (name: string, _parameter: RouteParameter<z.ZodType>) => {
             const parameter = _parameter as CookieParameter<z.ZodType>
             let input = (cookies ?? {})[parameter.options.altName ?? name]
-            parseOut = parameter.schema.safeParse(
+            return parameter.schema.safeParse(
                 input !== undefined && parameter.options.preprocessor
                     ? parameter.options.preprocessor(input)
                     : input
             )
-        } else if (_parameter.location == "body") {
+        },
+        body: async (name: string, _parameter: RouteParameter<z.ZodType>) => {
             const parameter = _parameter as BodyParameter<z.ZodType>
             if (parameter.schemaOr) {
-                let input: any
+                let input: unknown
                 if (parameter.schemaOr === String) input = await req.text()
                 else if (parameter.schemaOr === Blob) input = await req.blob()
                 else input = req.body // typeof ReadableStream
-                parseOut = { success: true, data: input }
+                return { success: true as const, data: input }
             } else {
                 let input = await req.json()
-                parseOut = parameter.schema.safeParse(input)
+                return parameter.schema.safeParse(input)
             }
-        } else if (_parameter.location == "$depends") {
+        },
+    }
+
+    for (const [name, _parameter] of Object.entries(parameters)) {
+        let parseOut!: z.SafeParseSuccess<unknown> | z.SafeParseError<unknown>
+        if (_parameter.location == "$depends") {
             const parameter = _parameter as DependsParameter<z.ZodType>
             const dependency = parameter.dependency
-            const dependencyParseInfo = await parseArgs(
-                dependency.parameters,
-                baseArgs,
-                rawParameters
-            )
+            const dependencyParseInfo = await parseArgs(dependency.parameters, input)
             success &&= dependencyParseInfo.success
             if (dependencyParseInfo.success)
-                args[name] = await parameter.dependency.handle(dependencyParseInfo.args)
+                args[name] = await dependency.handle(dependencyParseInfo.args, input.later)
             else errors.push(...dependencyParseInfo.errors)
             continue
+        } else {
+            parseOut = await parsers[_parameter.location](name, _parameter)
         }
 
         success &&= parseOut.success

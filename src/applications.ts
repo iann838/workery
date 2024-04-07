@@ -20,6 +20,7 @@ import type {
     RouteParameters,
 } from "./types"
 import { renderSwagger, renderRedoc } from "./renderers"
+import { createResolveLater } from "./helpers"
 
 export function defaultExceptionHandler<G>(_: ArgsOf<{}, G>, e: any) {
     console.error(e)
@@ -212,22 +213,32 @@ export class Apertum<G = {}> {
             const queries = searchParamsToQueries(url.searchParams)
             const nextMap: Record<string, () => Promise<Response>> = {}
             let next = async () => {
-                const parseInfo = await parseArgs<RouteParameters, G>(route.parameters, baseArgs, {
-                    params,
-                    queries,
-                    cookies,
-                })
-                if (parseInfo.success) {
-                    try {
-                        const res = await route.handle(parseInfo.args)
-                        if (res instanceof Response) return res
-                        return new route.responseClass(res, { status: route.statusCode })
-                    } catch (e) {
-                        if (e instanceof Response) return e
-                        throw e
+                const [resolve, later] = createResolveLater()
+                try {
+                    const parseInfo = await parseArgs<RouteParameters, G>(route.parameters, {
+                        baseArgs: baseArgs,
+                        later: later,
+                        rawParameters: {
+                            params,
+                            queries,
+                            cookies,
+                        },
+                    })
+                    let res: Response
+                    if (parseInfo.success) {
+                        res = await route.handle(parseInfo.args)
+                        if (!(res instanceof Response))
+                            res = new route.responseClass(res, { status: route.statusCode })
+                    } else {
+                        res = new JSONResponse({ detail: parseInfo.errors }, { status: 422 })
                     }
+                    resolve(res)
+                    return res
+                } catch (e: any) {
+                    resolve(e)
+                    if (e instanceof Response) return e
+                    throw e
                 }
-                return new JSONResponse({ detail: parseInfo.errors }, { status: 422 })
             }
             nextMap[this.middleware.length - 1] = next
             for (let i = this.middleware.length - 1; i >= 0; i--) {

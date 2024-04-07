@@ -26,3 +26,16 @@ export function isJsonCoercible(schema: z.ZodType): boolean {
             !!Object.values(schema._def.values).find((v) => String(v) !== v))
     )
 }
+
+export function createResolveLater<T = Response | Error>(): [
+    (res: T) => void,
+    (fn: (v: T) => void) => void,
+] {
+    let resolve!: (res: T) => void
+    const promise = new Promise<T>((r) => (resolve = r))
+    const later = (fn: (v: T) => void) => {
+        promise.then(fn)
+        return
+    }
+    return [resolve, later]
+}

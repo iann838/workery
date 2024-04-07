@@ -18,6 +18,8 @@ export type ResponseClass = new (body: any, init?: ResponseInit) => Response
 
 export type Next = () => Promise<Response>
 
+export type Later = (fn: (res: Response | Error) => void) => void
+
 export type Preprocessor = <Out = any, In = any>(value: In) => Out | In
 
 export interface RouteParameterOptions {
@@ -103,6 +105,10 @@ export type ExceptionHandler<G = {}> =
 export type RouteHandler<R, Ps extends RouteParameters, G = {}> =
     | ((args: ArgsOf<Ps, G>) => Promise<R>)
     | ((args: ArgsOf<Ps, G>) => R)
+
+export type DependencyHandler<R, Ps extends RouteParameters, G = {}> =
+    | ((args: ArgsOf<Ps, G>, later: Later) => Promise<R>)
+    | ((args: ArgsOf<Ps, G>, later: Later) => R)
 
 export type MiddlewareHandler<G = {}> =
     | ((args: ArgsOf<{}, G>, next: Next) => Promise<Response>)

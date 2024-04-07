@@ -54,8 +54,10 @@ const requireAuthSession = new Dependency({
     parameters: {
         authorization: Header(z.string()),
     },
-    handle: async ({ authorization }) => {
-        return { id: 123, username: "myuser" } // Authentication logic
+    handle: async ({ authorization }, later) => {
+        // Authentication logic
+        later((res) => /* Cleanup logic after request */)
+        return { id: 123, username: "myuser" } // return value to param
     },
 })
 
@@ -221,7 +223,7 @@ class Dependency<R, Ps extends RouteParameters, G = {}> {
     of?: Apertum<G> // Typing purposes only (infering G)
     name?: string
     parameters: Ps
-    handle: RouteHandler<R, Ps, G>
+    handle: DependencyHandler<R, Ps, G>
 }
 
 function Path(
