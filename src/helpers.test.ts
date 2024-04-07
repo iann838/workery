@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { isJsonCoercible, jsonCoerce } from "./helpers"
+import { createResolveLater, isJsonCoercible, jsonCoerce } from "./helpers"
 
 describe("function jsonCoerce", () => {
     test("[invocation]: return value", () => {
@@ -55,5 +55,28 @@ describe("function isJsonCoercible", () => {
         expect(isJsonCoercible(z.string().array())).toBe(false)
         expect(isJsonCoercible(z.bigint().array())).toBe(false)
         expect(isJsonCoercible(z.object({}))).toBe(false)
+    })
+})
+
+describe("function createResolveLater", () => {
+    test("[invocation]: return value", () => {
+        const [resolve, later] = createResolveLater()
+        expect(resolve).toBeInstanceOf(Function)
+        expect(later).toBeInstanceOf(Function)
+    })
+
+    test("[return]: data mutation", async () => {
+        const data = { num: 0 }
+        const [resolve, later] = createResolveLater()
+        expect(data.num).toBe(0)
+        later(() => data.num++)
+        later(() => data.num++)
+        later((res) => {
+            expect(res).toBeInstanceOf(Response)
+            data.num++
+        })
+        resolve(new Response(""))
+        await new Promise((r) => setTimeout(r, 10))
+        expect(data.num).toBe(3)
     })
 })
