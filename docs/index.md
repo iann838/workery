@@ -21,10 +21,10 @@ features:
         title: Like FastAPI, but in TypeScript for the Edges.
         details: Ever used FastAPI in Python? This will feel just like home.
     -   icon: ⚙️
-        title: OpenAPI and Zod integrated seemlessly.
-        details: Built-in integration of zod validators and openapi schema generators.
+        title: OpenAPI and Zod integrated seamlessly.
+        details: Built-in integration of Zod validators and OpenAPI schema generators.
     -   icon: 🏷️
-        title: Fully typed schemas and parameters
+        title: Fully typed schemas and parameters.
         details: All parameters and schemas are typed when implementing route handlers.
     -   icon: 📖
         title: Automatic API documentation pages.
