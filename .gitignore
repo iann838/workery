@@ -123,3 +123,6 @@ dist
 
 .DS_Store
 docs/site
+
+# Local
+docs/reference
