@@ -20,12 +20,7 @@ import type {
     RouteParameters,
 } from "./types"
 import { renderSwagger, renderRedoc } from "./renderers"
-import { createResolveLater } from "./helpers"
-
-export function defaultExceptionHandler<G>(_: ArgsOf<{}, G>, e: any) {
-    console.error(e)
-    return new Response("Internal Server Error", { status: 500 })
-}
+import { createResolveLater, baseExceptionHandler } from "./helpers"
 
 export class Apertum<G = {}> {
     basePath: string
@@ -78,7 +73,7 @@ export class Apertum<G = {}> {
         this.redocUrl = init.redocUrl === null ? null : init.redocUrl ?? "/redoc"
         this.middleware = init.middleware ?? []
         this.defaultResponseClass = init.defaultResponseClass ?? JSONResponse
-        this.exceptionHandler = init.exceptionHandler ?? defaultExceptionHandler
+        this.exceptionHandler = init.exceptionHandler ?? baseExceptionHandler
 
         this.router = new Router<G>()
 

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { ArgsOf } from "./types"
 
 export function jsonCoerce<Out = unknown>(value: string): Out | string
 export function jsonCoerce<Out = unknown>(value: string[]): Out[] | string[]
@@ -38,4 +39,9 @@ export function createResolveLater<T = Response | Error>(): [
         return
     }
     return [resolve, later]
+}
+
+export function baseExceptionHandler<G>(_: ArgsOf<{}, G>, e: any) {
+    console.error(e)
+    return new Response("Internal Server Error", { status: 500 })
 }

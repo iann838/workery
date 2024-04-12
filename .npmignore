@@ -4,3 +4,4 @@ config
 tools
 src
 coverage
+docs

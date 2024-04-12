@@ -1,3 +1,4 @@
-export { Apertum, defaultExceptionHandler } from "./applications"
+export { Apertum } from "./applications"
 export { Dependency } from "./dependencies"
 export { Middleware } from "./middleware"
+export { baseExceptionHandler } from "./helpers"
