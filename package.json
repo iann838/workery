@@ -1,6 +1,6 @@
 {
     "name": "apertum",
-    "version": "1.0.0-alpha.5",
+    "version": "1.0.0-beta.0",
     "description": "OpenAPI based, fast to code, fully typed.",
     "type": "module",
     "main": "./dist/index.cjs",
