@@ -1,6 +1,6 @@
 {
     "name": "workery",
-    "version": "1.0.0-beta.2",
+    "version": "1.0.0-rc.1",
     "description": "OpenAPI based, fast to code, fully typed.",
     "type": "module",
     "main": "./dist/index.cjs",
@@ -64,7 +64,7 @@
     ],
     "scripts": {
         "build": "rimraf dist && rollup -c && npm pack --dry-run",
-        "package": "npm run build && npm pack",
+        "package": "yarn build && npm pack",
         "prettify": "prettier --check src README.md || (prettier -w src README.md)",
         "prepare": "husky install",
         "test": "jest --no-cache --runInBand --config jestconfig.json --verbose",

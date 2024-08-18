@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-npm install workery
+yarn add workery
 ```
 
 ## Quick Start
