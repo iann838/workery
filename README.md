@@ -9,8 +9,9 @@ Workery is a Modern, OpenAPI based, fast to code, fully typed, web framework for
 -   ⚡️ **Like FastAPI, but in TypeScript for Cloudflare Workers.** Ever used FastAPI in Python? This will feel just like home.
 -   ⚙️ **OpenAPI and Zod integrated seamlessly.** Built-in integration of Zod validators and OpenAPI schema generators.
 -   🏷️ **Fully typed schemas and parameters.** All parameters and schemas are typed when implementing route handlers.
--   📖 **Automatic API documentation pages.** Swagger and Redoc pages are available at `/docs` and `/redoc`.
--   🪝 **Dependencies instead of complicated middleware.** Run code for preparing variables, authentication, and other tasks before processing a request.
+-   📖 **Automatic API documentation pages.** Swagger and Redoc pages are available by default at `/docs` and `/redoc`.
+-   🪝 **Dependencies instead of complicated middleware.** Prepare variables, enforce authentication, and run other tasks before processing a request.
+-   🔩 **Highly flexible and adaptable.** Designed for effortless addition, removal, and replacement of modules or components.
 
 ## Star me!
 

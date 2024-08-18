@@ -248,7 +248,7 @@ export class App<E = unknown> {
         }
     }
 
-    fetch(req: Request, env: E, ctx: ExecutionContext): Promise<Response> {
+    fetch: (req: Request, env: E, ctx: ExecutionContext) => Promise<Response> = (req, env, ctx) => {
         return this.handle({ req, env, ctx })
     }
 }

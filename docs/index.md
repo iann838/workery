@@ -28,8 +28,11 @@ features:
         details: All parameters and schemas are typed when implementing route handlers.
     -   icon: 📖
         title: Automatic API documentation pages.
-        details: Swagger and Redoc pages are available at `/docs` and `/redoc`.
+        details: Swagger and Redoc pages are available by default at `/docs` and `/redoc`.
     -   icon: 🪝
         title: Dependencies instead of complicated middleware.
-        details: Run code for preparing variables, authentication, and other tasks before processing a request.
+        details: Prepare variables, enforce authentication, and run other tasks before processing a request.
+    -   icon: 🔩
+        title: Highly flexible and adaptable.
+        details: Designed for effortless addition, removal, and replacement of modules or components.
 ---
