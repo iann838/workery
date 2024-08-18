@@ -63,8 +63,8 @@
         "dist"
     ],
     "scripts": {
-        "build": "rimraf dist && rollup -c && npm pack --dry-run",
-        "package": "yarn build && npm pack",
+        "build": "rimraf dist && rollup -c && yarn pack --dry-run",
+        "package": "yarn build && yarn pack",
         "prettify": "prettier --check src README.md || (prettier -w src README.md)",
         "prepare": "husky install",
         "test": "jest --no-cache --runInBand --config jestconfig.json --verbose",
