@@ -145,10 +145,10 @@ export function Depends<R>(dependency: Dependency<R, any, any>): DependsParamete
     }
 }
 
-export async function parseArgs<Ps extends RouteParameters, G = {}>(
+export async function parseArgs<Ps extends RouteParameters, E = unknown>(
     parameters: Ps,
     input: {
-        baseArgs: ArgsOf<{}, G>
+        baseArgs: ArgsOf<{}, E>
         rawParameters?: {
             params?: Record<string, string>
             queries?: Record<string, string[]>
@@ -156,7 +156,7 @@ export async function parseArgs<Ps extends RouteParameters, G = {}>(
         }
         later: Later
     }
-): Promise<ParseArgsInfo<Ps, G>> {
+): Promise<ParseArgsInfo<Ps, E>> {
     const { req } = input.baseArgs
     const { params, queries, cookies } = input.rawParameters ?? {}
 
@@ -241,7 +241,7 @@ export async function parseArgs<Ps extends RouteParameters, G = {}>(
             })
         }
     }
-    return { success, errors, args: args as ArgsOf<Ps, G> }
+    return { success, errors, args: args as ArgsOf<Ps, E> }
 }
 
 export function Responds(): ResponseConfig

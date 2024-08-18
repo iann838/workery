@@ -88,9 +88,13 @@ export type TypeOf<T> =
             ? R
             : unknown
 
-export type ArgsOf<Ps extends RouteParameters, G = {}> = { req: Request } & G & {
-        [K in keyof Ps]: TypeOf<Ps[K]>
-    }
+export type ArgsOf<Ps extends RouteParameters, E = unknown> = {
+    req: Request
+    env: E
+    ctx: ExecutionContext
+} & {
+    [K in keyof Ps]: TypeOf<Ps[K]>
+}
 
 export type InitOf<C extends abstract new (...args: any) => any> = C extends new (
     init: infer I extends { [k: string]: any }
@@ -98,24 +102,24 @@ export type InitOf<C extends abstract new (...args: any) => any> = C extends new
     ? I
     : never
 
-export type ExceptionHandler<G = {}> =
-    | ((args: ArgsOf<{}, G>, e: any) => Promise<Response>)
-    | ((args: ArgsOf<{}, G>, e: any) => Response)
+export type ExceptionHandler<E = unknown> =
+    | ((args: ArgsOf<{}, E>, e: any) => Promise<Response>)
+    | ((args: ArgsOf<{}, E>, e: any) => Response)
 
-export type RouteHandler<R, Ps extends RouteParameters, G = {}> =
-    | ((args: ArgsOf<Ps, G>) => Promise<R>)
-    | ((args: ArgsOf<Ps, G>) => R)
+export type RouteHandler<R, Ps extends RouteParameters, E = unknown> =
+    | ((args: ArgsOf<Ps, E>) => Promise<R>)
+    | ((args: ArgsOf<Ps, E>) => R)
 
-export type DependencyHandler<R, Ps extends RouteParameters, G = {}> =
-    | ((args: ArgsOf<Ps, G>, later: Later) => Promise<R>)
-    | ((args: ArgsOf<Ps, G>, later: Later) => R)
+export type DependencyHandler<R, Ps extends RouteParameters, E = unknown> =
+    | ((args: ArgsOf<Ps, E>, later: Later) => Promise<R>)
+    | ((args: ArgsOf<Ps, E>, later: Later) => R)
 
-export type MiddlewareHandler<G = {}> =
-    | ((args: ArgsOf<{}, G>, next: Next) => Promise<Response>)
-    | ((args: ArgsOf<{}, G>, next: Next) => Response)
+export type MiddlewareHandler<E = unknown> =
+    | ((args: ArgsOf<{}, E>, next: Next) => Promise<Response>)
+    | ((args: ArgsOf<{}, E>, next: Next) => Response)
 
-export type HeadlessRoute<R, Ps extends RouteParameters, G> = Omit<
-    InitOf<typeof Route<R, Ps, G>>,
+export type HeadlessRoute<R, Ps extends RouteParameters, E> = Omit<
+    InitOf<typeof Route<R, Ps, E>>,
     "method" | "path"
 >
 
@@ -125,8 +129,8 @@ export interface ParseArgsError {
     issues: z.ZodIssue[]
 }
 
-export interface ParseArgsInfo<Ps extends RouteParameters, G = {}> {
+export interface ParseArgsInfo<Ps extends RouteParameters, E = unknown> {
     success: boolean
     errors: ParseArgsError[]
-    args: ArgsOf<Ps, G>
+    args: ArgsOf<Ps, E>
 }

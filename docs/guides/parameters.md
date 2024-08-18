@@ -1,6 +1,6 @@
 # Parameters
 
-Module: `apertum/parameters`
+Module: `workery/parameters`
 
 Parameter definition is directly integrated with Zod validators and the corresponding OpenAPI schema is generated when required.
 
@@ -36,7 +36,7 @@ Example:
 
 Header parameter keys automatically replaces `_` with `-` to ease definition of dash separated headers such as `X-Rate-Limit`.
 
-An automatic coercion `options.preprocessor` is used if it detects that `isJsonCoercible(schema) == true` (from `apertum/helpers`), qualified schemas includes but not limited to:
+An automatic coercion `options.preprocessor` is used if it detects that `isJsonCoercible(schema) == true` (from `workery/helpers`), qualified schemas includes but not limited to:
 -   `ZodNumber`
 -   `ZodBoolean`
 -   `ZodNativeEnum`

@@ -1,7 +1,13 @@
+import type { ExecutionContext } from "@cloudflare/workers-types"
 import { z } from "zod"
 import { Dependency } from "./dependencies"
 import { Query } from "./parameters"
 import { createResolveLater } from "./helpers"
+
+const cfargs = {
+    env: undefined,
+    ctx: undefined as unknown as ExecutionContext,
+}
 
 describe("class Dependency", () => {
     test("[constructor]: mutation", () => {
@@ -26,6 +32,7 @@ describe("class Dependency", () => {
             dependency.handle(
                 {
                     req: new Request("https://page.com/path"),
+                    ...cfargs,
                     key: 2,
                 },
                 () => undefined
@@ -51,6 +58,7 @@ describe("class Dependency", () => {
             await dependency.handle(
                 {
                     req: new Request("https://page.com/path"),
+                    ...cfargs,
                     key: 2,
                 },
                 later

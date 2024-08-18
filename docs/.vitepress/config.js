@@ -1,9 +1,9 @@
 export default {
-    title: 'Apertum',
+    title: 'Workery',
     description: 'OpenAPI based, fast to code, fully typed.',
     themeConfig: {
         logo: "https://www.openapis.org/wp-content/uploads/sites/3/2016/11/favicon.png",
-        siteTitle: "Apertum",
+        siteTitle: "Workery",
         nav: [
             {
                 text: "Guides",
@@ -15,14 +15,14 @@ export default {
             },
             {
                 text: "Star me!",
-                link: "https://github.com/iann838/apertum",
+                link: "https://github.com/iann838/workery",
                 activeMatch: ".",
             },
         ],
         socialLinks: [
             {
                 icon: "github",
-                link: "https://github.com/iann838/apertum"
+                link: "https://github.com/iann838/workery"
             },
         ],
         sidebar: {
@@ -62,10 +62,6 @@ export default {
                                 text: "Responses",
                                 link: "/guides/responses.md",
                             },
-                            {
-                                text: "Adapters",
-                                link: "/guides/adapters.md",
-                            },
                         ]
                     },
                     {
@@ -91,7 +87,6 @@ export default {
             "/reference/": {
                 items: [
                     { text: "index", link: "/reference/modules/" },
-                    { text: "adapters", link: "/reference/modules/adapters.md" },
                     { text: "applications", link: "/reference/modules/applications.md" },
                     { text: "dependencies", link: "/reference/modules/dependencies.md" },
                     { text: "helpers", link: "/reference/modules/helpers.md" },

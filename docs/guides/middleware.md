@@ -1,6 +1,6 @@
 # Middleware
 
-Module: `apertum/middleware`
+Module: `workery/middleware`
 
 A "middleware" is a function that works with every request before it is processed by any specific route handler. And also with every response before returning it.
 
@@ -22,9 +22,9 @@ Init:
 
 | Key | Type | Descrition | Default |
 | :-- | :--- | :--------- | :------ |
-| `of?` | `Apertum<G>` | Type inference (generic `G`) purpose only. |  |
+| `of?` | `App<E>` | Env type inference (generic `E`) purpose only. |  |
 | `name?` | `string` | Identifier purpose only. |  |
-| `handle` | `MiddlewareHandler<G>` | Middleware handler function |  |
+| `handle` | `MiddlewareHandler<E>` | Middleware handler function |  |
 
 Example:
 
@@ -44,7 +44,7 @@ Accessing adapter global args:
 
 ```ts
 const requireAuth = new Middleware({
-    of: new Apertum<{ env: Env }>({}), // or simply pass `app`
+    of: new App<Env>({}), // or simply pass `app`
     handle: async ({ req, env }) => {
         // ...
     },
@@ -71,7 +71,7 @@ const CORSMiddleware = (options?: {
 Usage:
 
 ```ts
-const app = new Apertum({
+const app = new App({
     middleware: [CORSMiddleware({ origin: ["http://a.co"] })],
 })
 ```
@@ -89,7 +89,7 @@ const CompressMiddleware = (format: CompressionFormat) => Middleware
 Usage:
 
 ```ts
-const app = new Apertum({
+const app = new App({
     middleware: [CompressMiddleware("gzip")],
 })
 ```

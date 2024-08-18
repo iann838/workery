@@ -1,10 +1,10 @@
 # Responses
 
-Module: `apertum/responses`
+Module: `workery/responses`
 
 All responses are extended from the `Response` class of the Global Web API.
 
-By default, Apertum uses `JSONResponse` to wrap return values of route handlers if it is not a `Response`. Available response classes:
+By default, Workery uses `JSONResponse` to wrap return values of route handlers if it is not a `Response`. Available response classes:
 
 ## JSONResponse
 

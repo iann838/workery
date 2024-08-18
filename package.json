@@ -1,5 +1,5 @@
 {
-    "name": "apertum",
+    "name": "workery",
     "version": "1.0.0-beta.2",
     "description": "OpenAPI based, fast to code, fully typed.",
     "type": "module",
@@ -14,11 +14,6 @@
             "import": "./dist/index.js",
             "require": "./dist/index.cjs",
             "types": "./dist/index.d.ts"
-        },
-        "./adapters": {
-            "import": "./dist/adapters.js",
-            "require": "./dist/adapters.cjs",
-            "types": "./dist/adapters.d.ts"
         },
         "./applications": {
             "import": "./dist/applications.js",
@@ -83,7 +78,7 @@
         "access": "public"
     },
     "keywords": [
-        "apertum",
+        "workery",
         "web",
         "app",
         "http",
@@ -105,15 +100,16 @@
     ],
     "author": "Jian Huang <iann838dev@gmail.com> (https://github.com/iann838)",
     "license": "MIT",
-    "homepage": "https://github.com/iann838/apertum",
+    "homepage": "https://github.com/iann838/workery",
     "repository": {
         "type": "git",
-        "url": "git@github.com:iann838/apertum.git"
+        "url": "git@github.com:iann838/workery.git"
     },
     "bugs": {
-        "url": "https://github.com/iann838/apertum/issues"
+        "url": "https://github.com/iann838/workery/issues"
     },
     "devDependencies": {
+        "@cloudflare/workers-types": "^4.20230518.0",
         "@commitlint/cli": "^13.1.0",
         "@commitlint/config-conventional": "^13.1.0",
         "@rollup/plugin-terser": "^0.2.1",

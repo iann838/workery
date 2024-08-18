@@ -1,15 +1,15 @@
 # Applications
 
-Module: `apertum/applications`
+Module: `workery/applications`
 
-## Apertum
+## Workery
 
 Defines a standard application.
 
 Example:
 
 ```ts
-const app = new Apertum({})
+const app = new App({})
 ```
 
 Init:
@@ -28,11 +28,11 @@ Init:
 | `openapiUrl?` | `null \| string` | The URL where the OpenAPI schema will be served from. If set to `null`, no OpenAPI schema will be served publicly, and the default automatic docs will also be disabled. | `"/openapi.json"` |
 | `swaggerUrl?` | `null \| string` | The path to the automatic Swagger API documentation. Can be disabled by setting it to `null`. | `"/docs"` |
 | `redocUrl?` | `null \| string` | The path to the automatic Redoc API documentation. Can be disabled by setting it to `null`. | `"/redoc"` |
-| `middleware?` | `Middleware<G>[]` | List of middleware used by the application. | `[]` |
+| `middleware?` | `Middleware<E>[]` | List of middleware used by the application. | `[]` |
 | `defaultResponseClass?` | `ResponseClass` | The default response class to be used. | `JSONResponse` |
-| `exceptionHandler?` | `ExceptionHandler<G>` | The handler to be used in case of exception. | `baseExceptionHandler` |
+| `exceptionHandler?` | `ExceptionHandler<E>` | The handler to be used in case of exception. | `baseExceptionHandler` |
 
-The generic `G` should be manually typed, specifying the global common args except `req`, this allow global args to be typed when implementing handlers. For example for a cloudflare workers project with D1 binding:
+The generic `E` corresponds to the `env` type definition and should be manually typed, this allow the env arg to be typed when implementing handlers. For example:
 
 ```ts
 interface Env {
@@ -40,7 +40,7 @@ interface Env {
     D1: D1Database
 }
 
-const app = new Apertum<{ env: Env, ctx: ExecutionContext }>({})
+const app = new App<Env>({})
 ```
 
 ## Adding routes
@@ -77,7 +77,7 @@ When adding routes to the application, it receives headless route that later the
 | `includeInSchema?` | `boolean` | Include in OAS rendering. | `true` |
 | `responseClass?` | `ResponseClass` | Default `Response` constructor if return value is not a `Response`. | `JSONResponse` |
 | `parameters` | `Ps extends RouteParameters` | Parameter specification. See [Parameters](/guides/parameters.md). |  |
-| `handle` | `RouteHandler<R, Ps, G>` | Route handler function |  |
+| `handle` | `RouteHandler<R, Ps, E>` | Route handler function |  |
 
 To add a route with a dynamic http method at runtime, use the `route` method instead.
 
@@ -86,8 +86,8 @@ To add a route with a dynamic http method at runtime, use the `route` method ins
 Route handlers is defined by a function of the following signatures:
 
 ```ts
-(args: ArgsOf<Ps, G>) => Promise<R>
-(args: ArgsOf<Ps, G>) => R
+(args: ArgsOf<Ps, E>) => Promise<R>
+(args: ArgsOf<Ps, E>) => R
 ```
 
 Simple handler example:
@@ -106,7 +106,7 @@ app.get("/greet", {
 Return text instead of JSON:
 
 ```ts
-import { PlainTextResponse } from "apertum/responses"
+import { PlainTextResponse } from "workery/responses"
 
 app.get("/greet", {
     responseClass: PlainTextResponse,
@@ -122,7 +122,7 @@ app.get("/greet", {
 Directly returning a response:
 
 ```ts
-import { PlainTextResponse } from "apertum/responses"
+import { PlainTextResponse } from "workery/responses"
 
 app.get("/greet", {
     responseClass: PlainTextResponse,
@@ -138,7 +138,7 @@ app.get("/greet", {
 Throwing a response:
 
 ```ts
-import { JSONResponse } from "apertum/responses"
+import { JSONResponse } from "workery/responses"
 
 app.get("/greet", {
     responseClass: PlainTextResponse,

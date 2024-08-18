@@ -22,7 +22,7 @@ import type {
 import { renderSwagger, renderRedoc } from "./renderers"
 import { createResolveLater, baseExceptionHandler } from "./helpers"
 
-export class Apertum<G = {}> {
+export class App<E = unknown> {
     basePath: string
     title: string
     description: string
@@ -35,11 +35,11 @@ export class Apertum<G = {}> {
     openapiUrl: string | null
     swaggerUrl: string | null
     redocUrl: string | null
-    middleware: Middleware<G>[]
+    middleware: Middleware<E>[]
     defaultResponseClass: ResponseClass
-    exceptionHandler: ExceptionHandler<G>
+    exceptionHandler: ExceptionHandler<E>
 
-    router: Router<G>
+    router: Router<E>
     private _openapi?: OpenAPIObject
 
     constructor(init: {
@@ -55,9 +55,9 @@ export class Apertum<G = {}> {
         openapiUrl?: string | null
         swaggerUrl?: string | null
         redocUrl?: string | null
-        middleware?: Middleware<G>[]
+        middleware?: Middleware<E>[]
         defaultResponseClass?: ResponseClass
-        exceptionHandler?: ExceptionHandler<G>
+        exceptionHandler?: ExceptionHandler<E>
     }) {
         this.basePath = init.basePath ?? ""
         this.title = init.title ?? "Untitled"
@@ -68,14 +68,14 @@ export class Apertum<G = {}> {
         this.contact = init.contact
         this.license = init.license
         this.termsOfService = init.termsOfService
-        this.openapiUrl = init.openapiUrl === null ? null : init.openapiUrl ?? "/openapi.json"
-        this.swaggerUrl = init.swaggerUrl === null ? null : init.swaggerUrl ?? "/docs"
-        this.redocUrl = init.redocUrl === null ? null : init.redocUrl ?? "/redoc"
+        this.openapiUrl = init.openapiUrl === null ? null : (init.openapiUrl ?? "/openapi.json")
+        this.swaggerUrl = init.swaggerUrl === null ? null : (init.swaggerUrl ?? "/docs")
+        this.redocUrl = init.redocUrl === null ? null : (init.redocUrl ?? "/redoc")
         this.middleware = init.middleware ?? []
         this.defaultResponseClass = init.defaultResponseClass ?? JSONResponse
         this.exceptionHandler = init.exceptionHandler ?? baseExceptionHandler
 
-        this.router = new Router<G>()
+        this.router = new Router<E>()
 
         if (this.openapiUrl) {
             this.get(this.openapiUrl, {
@@ -109,58 +109,58 @@ export class Apertum<G = {}> {
 
     get<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         return this.route("GET", path, headlessRoute)
     }
     post<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         return this.route("POST", path, headlessRoute)
     }
     put<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         return this.route("PUT", path, headlessRoute)
     }
     delete<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         return this.route("DELETE", path, headlessRoute)
     }
     patch<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         return this.route("PATCH", path, headlessRoute)
     }
     head<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         return this.route("HEAD", path, headlessRoute)
     }
     trace<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         return this.route("TRACE", path, headlessRoute)
     }
     options<R, Ps extends RouteParameters>(
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         return this.route("OPTIONS", path, headlessRoute)
     }
 
     route<R, Ps extends RouteParameters>(
         method: HTTPMethod,
         path: string,
-        headlessRoute: HeadlessRoute<R, Ps, G>
-    ): Route<R, Ps, G> {
+        headlessRoute: HeadlessRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
         this._openapi = undefined
         const route = new Route({
             method: method,
@@ -195,7 +195,7 @@ export class Apertum<G = {}> {
         return this._openapi
     }
 
-    async handle(baseArgs: ArgsOf<{}, G>): Promise<Response> {
+    async handle(baseArgs: ArgsOf<{}, E>): Promise<Response> {
         const { req } = baseArgs
         try {
             const url = new URL(req.url)
@@ -210,7 +210,7 @@ export class Apertum<G = {}> {
             let next = async () => {
                 const [resolve, later] = createResolveLater()
                 try {
-                    const parseInfo = await parseArgs<RouteParameters, G>(route.parameters, {
+                    const parseInfo = await parseArgs<RouteParameters, E>(route.parameters, {
                         baseArgs: baseArgs,
                         later: later,
                         rawParameters: {
@@ -246,5 +246,9 @@ export class Apertum<G = {}> {
             if (e instanceof Response) return e
             return await this.exceptionHandler(baseArgs, e)
         }
+    }
+
+    fetch(req: Request, env: E, ctx: ExecutionContext): Promise<Response> {
+        return this.handle({ req, env, ctx })
     }
 }

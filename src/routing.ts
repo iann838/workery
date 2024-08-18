@@ -17,7 +17,7 @@ export function fixPathSlashes(path: string) {
     return path
 }
 
-export class Route<R, Ps extends RouteParameters, G = {}> {
+export class Route<R, Ps extends RouteParameters, E = unknown> {
     method: HTTPMethod
     path: string
     name?: string
@@ -31,7 +31,7 @@ export class Route<R, Ps extends RouteParameters, G = {}> {
     includeInSchema: boolean
     responseClass: ResponseClass
     parameters: Ps
-    handle: RouteHandler<R, Ps, G>
+    handle: RouteHandler<R, Ps, E>
 
     constructor(init: {
         method: HTTPMethod
@@ -47,7 +47,7 @@ export class Route<R, Ps extends RouteParameters, G = {}> {
         statusCode?: number
         responseClass?: ResponseClass
         parameters: Ps
-        handle: RouteHandler<R, Ps, G>
+        handle: RouteHandler<R, Ps, E>
     }) {
         this.method = init.method
         this.path = fixPathSlashes(init.path)
@@ -136,10 +136,10 @@ export class Route<R, Ps extends RouteParameters, G = {}> {
     }
 }
 
-export class RouteNode<G = {}> {
-    private inner: Record<string, RouteNode<G>>
+export class RouteNode<E = unknown> {
+    private inner: Record<string, RouteNode<E>>
     name: string
-    routes: Record<string, Route<any, any, G>>
+    routes: Record<string, Route<any, any, E>>
     paramNames: string[]
 
     constructor(name: string) {
@@ -149,12 +149,12 @@ export class RouteNode<G = {}> {
         this.paramNames = []
     }
 
-    touch(node: string): RouteNode<G> {
+    touch(node: string): RouteNode<E> {
         this.inner[node] ||= new RouteNode(node)
         return this.inner[node]!
     }
 
-    match(node: string): RouteNode<G> | undefined {
+    match(node: string): RouteNode<E> | undefined {
         return this.inner[node] ?? this.inner["{}"]
     }
 }
@@ -168,16 +168,16 @@ export function searchParamsToQueries(searchParams: URLSearchParams): Record<str
     return queries
 }
 
-export class Router<G = {}> {
-    routes: Route<any, any, G>[]
-    private matcher: RouteNode<G>
+export class Router<E = unknown> {
+    routes: Route<any, any, E>[]
+    private matcher: RouteNode<E>
 
     constructor() {
         this.routes = []
         this.matcher = new RouteNode("")
     }
 
-    *[Symbol.iterator](): IterableIterator<Route<any, any, G>> {
+    *[Symbol.iterator](): IterableIterator<Route<any, any, E>> {
         for (const route of this.routes) {
             yield route
         }
@@ -187,7 +187,7 @@ export class Router<G = {}> {
         return this.routes.length
     }
 
-    push(...routes: Route<any, any, G>[]): number {
+    push(...routes: Route<any, any, E>[]): number {
         for (const route of routes) {
             this.routes.push(route)
             const nodes = route.path.split("/").slice(1)
@@ -211,7 +211,7 @@ export class Router<G = {}> {
     match(
         method: string,
         path: string
-    ): [Route<any, any, G> | undefined | null, Record<string, string>] {
+    ): [Route<any, any, E> | undefined | null, Record<string, string>] {
         const nodes = fixPathSlashes(path).split("/").slice(1)
         const paramValues: string[] = []
         let matcher = this.matcher

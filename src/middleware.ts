@@ -1,12 +1,12 @@
-import type { Apertum } from "./applications"
+import type { App } from "./applications"
 import type { MiddlewareHandler } from "./types"
 
-export class Middleware<G = {}> {
-    of?: Apertum<G>
+export class Middleware<E = unknown> {
+    of?: App<E>
     name?: string
-    handle: MiddlewareHandler<G>
+    handle: MiddlewareHandler<E>
 
-    constructor(init: { of?: Apertum<G>; name?: string; handle: MiddlewareHandler<G> }) {
+    constructor(init: { of?: App<E>; name?: string; handle: MiddlewareHandler<E> }) {
         this.of = init.of
         this.name = init.name
         this.handle = init.handle

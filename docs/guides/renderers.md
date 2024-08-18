@@ -1,6 +1,6 @@
 # Renderers
 
-Module: `apertum/renderers`
+Module: `workery/renderers`
 
 List of renderers.
 

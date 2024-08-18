@@ -1,10 +1,10 @@
 # Dependencies
 
-Module: `apertum/dependencies`
+Module: `workery/dependencies`
 
 **Dependency Injection** means, in programming, that there is a way for your code (in this case, your route handlers) to declare things that it requires to work and use: "dependencies".
 
-And then, that system (in this case **Apertum**) will take care of doing whatever is needed to provide your code with those needed dependencies ("inject" the dependencies).
+And then, that workflow (in this case **Workery**) will take care of doing what is needed to provide your code with those declared dependencies ("inject" the dependencies).
 
 This is very useful when you need to:
 
@@ -25,10 +25,10 @@ Init:
 
 | Key | Type | Descrition | Default |
 | :-- | :--- | :--------- | :------ |
-| `of?` | `Apertum<G>` | Type inference (generic `G`) purpose only. |  |
+| `of?` | `App<E>` | Env type inference (generic `E`) purpose only. |  |
 | `name?` | `string` | Identifier purpose only. |  |
 | `parameters` | `Ps extends RouteParameters` | Parameter specification. See [Parameters](/guides/parameters.md). |  |
-| `handle` | `DependencyHandler<R, Ps, G>` | Dependency handler function |  |
+| `handle` | `DependencyHandler<R, Ps, E>` | Dependency handler function |  |
 
 
 Example:
@@ -70,7 +70,7 @@ Accessing adapter global args:
 
 ```ts
 const requireAuth = new Dependency({
-    of: new Apertum<{ env: Env }>({}), // or simply pass `app`
+    of: new App<Env>({}), // or simply pass `app`
     parameters: {
         authorization: Header(z.string()),
     },

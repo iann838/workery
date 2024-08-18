@@ -1,6 +1,6 @@
 # Helpers
 
-Module: `apertum/helpers`
+Module: `workery/helpers`
 
 List of helper functions.
 
@@ -23,4 +23,4 @@ Used internally to support dependency after-request hooks.
 
 ## baseExceptionHandler(_, e)
 
-Base exception handler for apertum applications. Logs the error with `console.error` and returns an HTTP 500 Internal Server Error `Response`.
+Base exception handler for workery applications. Logs the error with `console.error` and returns an HTTP 500 Internal Server Error `Response`.

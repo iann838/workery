@@ -1,7 +1,13 @@
+import type { ExecutionContext } from "@cloudflare/workers-types"
 import { z } from "zod"
 import { Dependency } from "./dependencies"
 import { createResolveLater, jsonCoerce } from "./helpers"
 import { Body, Cookie, Depends, Header, Path, Query, parseArgs, Responds } from "./parameters"
+
+const cfargs = {
+    env: undefined,
+    ctx: undefined as unknown as ExecutionContext,
+}
 
 const nullLater = () =>
     void describe("function Path", () => {
@@ -73,7 +79,7 @@ describe("function parseArgs", () => {
         const parseInfo1 = await parseArgs(
             {},
             {
-                baseArgs: { req: new Request("http://a.co/notimportant") },
+                baseArgs: { req: new Request("http://a.co/notimportant"), ...cfargs },
                 later: nullLater,
             }
         )
@@ -102,6 +108,7 @@ describe("function parseArgs", () => {
                         headers: { "P-Header": "htext" },
                         body: JSON.stringify({ key: "mykey", value: 12 }),
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
                 rawParameters: {
@@ -142,6 +149,7 @@ describe("function parseArgs", () => {
                         method: "POST",
                         body: JSON.stringify({ key: "mykey", value: 12 }),
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
             }
@@ -164,6 +172,7 @@ describe("function parseArgs", () => {
                         method: "POST",
                         body: "mysampletext",
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
             }
@@ -186,6 +195,7 @@ describe("function parseArgs", () => {
                         method: "POST",
                         body: "mysampletext",
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
             }
@@ -206,6 +216,7 @@ describe("function parseArgs", () => {
                         method: "POST",
                         body: "mysampletext",
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
             }
@@ -228,6 +239,7 @@ describe("function parseArgs", () => {
                         body: JSON.stringify({ key: "mykey", value: 12 }),
                         headers: { "P-Header": "htext" },
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
                 rawParameters: {
@@ -253,6 +265,7 @@ describe("function parseArgs", () => {
                         body: JSON.stringify({ key: "mykey", value: 12 }),
                         headers: { "P-Header": "htext" },
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
                 rawParameters: {
@@ -288,6 +301,7 @@ describe("function parseArgs", () => {
                         headers: { "P-Header": "htext" },
                         body: JSON.stringify({ key: "mykey", value: 12 }),
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
                 rawParameters: {
@@ -326,6 +340,7 @@ describe("function parseArgs", () => {
                     req: new Request("http://a.co/notimportant", {
                         headers: { "P-Header": "htext" },
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
                 rawParameters: {
@@ -365,6 +380,7 @@ describe("function parseArgs", () => {
                     req: new Request("http://a.co/notimportant", {
                         headers: { "P-Header": "htext" },
                     }),
+                    ...cfargs,
                 },
                 later: later,
                 rawParameters: {
@@ -398,6 +414,7 @@ describe("function parseArgs", () => {
                         method: "POST",
                         body: JSON.stringify({ key: "mykey", value: "12" }),
                     }),
+                    ...cfargs,
                 },
                 later: nullLater,
                 rawParameters: {
@@ -419,6 +436,7 @@ describe("function parseArgs", () => {
                         method: "POST",
                         body: JSON.stringify({ key: "mykey", value: "12" }),
                     }),
+                    ...cfargs,
                 },
                 rawParameters: {
                     params: { pPath: "abc" },
@@ -451,6 +469,7 @@ describe("function parseArgs", () => {
                         body: JSON.stringify({ key: "mykey", value: 12 }),
                         headers: { "P-Header": "htext" },
                     }),
+                    ...cfargs,
                 },
                 rawParameters: {
                     params: { pPath: "23" },
@@ -476,6 +495,7 @@ describe("function parseArgs", () => {
                         body: JSON.stringify({ key: "mykey", value: 12 }),
                         headers: { "P-Header": "htext" },
                     }),
+                    ...cfargs,
                 },
                 rawParameters: {
                     params: { pPath: "23" },

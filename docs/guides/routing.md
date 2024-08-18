@@ -1,10 +1,10 @@
 # Routing
 
-Module: `apertum/routing`
+Module: `workery/routing`
 
 This page is for reference purpose only, users are expected to use this module directly.
 
-Apertum uses a tree-based route matching approach. This module has 3 main classes: `Route`, `Router`, and `RouteNode`.
+Workery uses a tree-based route matching approach. This module has 3 main classes: `Route`, `Router`, and `RouteNode`.
 
 ## Router
 

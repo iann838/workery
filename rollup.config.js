@@ -4,7 +4,6 @@ import typescript from '@rollup/plugin-typescript'
 export default {
     input: [
         'src/index.ts',
-        'src/adapters.ts',
         'src/applications.ts',
         'src/dependencies.ts',
         'src/helpers.ts',

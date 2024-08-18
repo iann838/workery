@@ -1,6 +1,12 @@
+import type { ExecutionContext } from "@cloudflare/workers-types"
 import { JSONResponse } from "./responses"
 import { CORSMiddleware, CompressMiddleware, Middleware } from "./middleware"
 import type { Next } from "./types"
+
+const cfargs = {
+    env: undefined,
+    ctx: undefined as unknown as ExecutionContext,
+}
 
 describe("class Middleware", () => {
     test("[constructor]: mutation", () => {
@@ -35,6 +41,7 @@ describe("function CORSMiddleware", () => {
                 req: new Request("http://127.0.0.1:8000/path", {
                     headers: { Origin: "http://127.0.0.1:8000" },
                 }),
+                ...cfargs,
             },
             next
         )
@@ -46,6 +53,7 @@ describe("function CORSMiddleware", () => {
                 req: new Request("https://page.com/path", {
                     headers: { Origin: "https://page.com" },
                 }),
+                ...cfargs,
             },
             next
         )
@@ -58,6 +66,7 @@ describe("function CORSMiddleware", () => {
                     method: "OPTIONS",
                     headers: { Origin: "https://page.com" },
                 }),
+                ...cfargs,
             },
             next
         )
@@ -71,6 +80,7 @@ describe("function CORSMiddleware", () => {
                 req: new Request("http://127.0.0.1:8800/path", {
                     headers: { Origin: "http://127.0.0.1:8800" },
                 }),
+                ...cfargs,
             },
             next
         )
@@ -84,6 +94,7 @@ describe("function CORSMiddleware", () => {
                 req: new Request("https://google.com/path", {
                     headers: { Origin: "https://google.com" },
                 }),
+                ...cfargs,
             },
             next
         )
@@ -96,6 +107,7 @@ describe("function CORSMiddleware", () => {
                     method: "OPTIONS",
                     headers: { Origin: "https://google.com" },
                 }),
+                ...cfargs,
             },
             next
         )
@@ -115,7 +127,7 @@ describe("function CompressMiddleware", () => {
         const data = { data: [1, 23] }
         const next = async () => new JSONResponse(data)
         const response1 = await middleware.handle(
-            { req: new Request("https://page.com/path") },
+            { req: new Request("https://page.com/path"), ...cfargs },
             next
         )
         const response2 = await middleware.handle(
@@ -123,6 +135,7 @@ describe("function CompressMiddleware", () => {
                 req: new Request("https://page.com/path", {
                     headers: { "Accept-Encoding": "gzip" },
                 }),
+                ...cfargs,
             },
             next
         )

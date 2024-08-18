@@ -41,7 +41,7 @@ export function createResolveLater<T = Response | Error>(): [
     return [resolve, later]
 }
 
-export function baseExceptionHandler<G>(_: ArgsOf<{}, G>, e: any) {
+export function baseExceptionHandler<E>(_: ArgsOf<{}, E>, e: any) {
     console.error(e)
     return new Response("Internal Server Error", { status: 500 })
 }

@@ -2,23 +2,23 @@
 layout: home
 
 hero:
-    name: Apertum
+    name: Workery
     text: OpenAPI based, fast to code, fully typed.
     image:
         src: https://www.openapis.org/wp-content/uploads/sites/3/2016/11/favicon.png
         alt: OpenAPI initiative logo
-    tagline: Modern web framework for the edges.
+    tagline: Modern web framework for Cloudflare Workers.
     actions:
         -   theme: brand
             text: Get Started
             link: /guides/quickstart
         -   theme: alt
             text: View Source
-            link: https://github.com/iann838/apertum
+            link: https://github.com/iann838/workery
 
 features:
     -   icon: ⚡️
-        title: Like FastAPI, but in TypeScript for the Edges.
+        title: Like FastAPI, but in TypeScript for Cloudflare Workers.
         details: Ever used FastAPI in Python? This will feel just like home.
     -   icon: ⚙️
         title: OpenAPI and Zod integrated seamlessly.
@@ -32,7 +32,4 @@ features:
     -   icon: 🪝
         title: Dependencies instead of complicated middleware.
         details: Run code for preparing variables, authentication, and other tasks before processing a request.
-    -   icon: 🔩
-        title: Adaptable to any JavaScript runtime.
-        details: Adapters are provided for Cloudflare Workers, you may build your own adapters.
 ---

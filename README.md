@@ -1,17 +1,16 @@
-# Apertum
+# Workery
 
-Documentation: https://apertum.iann838.com/
+Documentation: https://workery.iann838.com/
 
-Apertum is a Modern, OpenAPI based, fast to code, fully typed, web framework for building APIs in Node.js and the Edges (Cloudflare Workers, etc.).
+Workery is a Modern, OpenAPI based, fast to code, fully typed, web framework for building APIs on Cloudflare Workers.
 
 ## Features
 
--   ⚡️ **Like FastAPI, but in TypeScript for the Edges.** Ever used FastAPI in Python? This will feel just like home.
+-   ⚡️ **Like FastAPI, but in TypeScript for Cloudflare Workers.** Ever used FastAPI in Python? This will feel just like home.
 -   ⚙️ **OpenAPI and Zod integrated seamlessly.** Built-in integration of Zod validators and OpenAPI schema generators.
 -   🏷️ **Fully typed schemas and parameters.** All parameters and schemas are typed when implementing route handlers.
 -   📖 **Automatic API documentation pages.** Swagger and Redoc pages are available at `/docs` and `/redoc`.
 -   🪝 **Dependencies instead of complicated middleware.** Run code for preparing variables, authentication, and other tasks before processing a request.
--   🔩 **Adaptable to any JavaScript runtime.** Adapters are provided for Cloudflare Workers, you may build your own adapters.
 
 ## Star me!
 

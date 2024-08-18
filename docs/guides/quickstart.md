@@ -3,18 +3,17 @@
 ## Installation
 
 ```
-npm install apertum
+npm install workery
 ```
 
 ## Quick Start
 
 ```ts
-import { Apertum } from "apertum"
-import { adaptCfWorkers } from "apertum/adapters"
-import { Query } from "apertum/parameters"
+import { App } from "workery"
+import { Query } from "workery/parameters"
 import { z } from "zod"
 
-const app = new Apertum({})
+const app = new App({})
 
 app.get("/greet", {
     parameters: {
@@ -25,5 +24,5 @@ app.get("/greet", {
     },
 })
 
-export default adaptCfWorkers(app)
+export default app
 ```

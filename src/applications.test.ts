@@ -1,14 +1,19 @@
 import { z } from "zod"
-import { Apertum } from "./applications"
+import type { ExecutionContext } from "@cloudflare/workers-types"
+
+import { App } from "./applications"
 import { Dependency } from "./dependencies"
 import { CORSMiddleware, CompressMiddleware } from "./middleware"
 import { Body, Depends, Header, Path, Query, Responds } from "./parameters"
 import { JSONResponse, PlainTextResponse } from "./responses"
 
-const app = new Apertum({
+const app = new App<undefined>({
     middleware: [CompressMiddleware("gzip"), CORSMiddleware({ origin: ["http://a.co"] })],
 })
-
+const cfargs = {
+    env: undefined,
+    ctx: undefined as unknown as ExecutionContext,
+}
 const requireAuthSession = new Dependency({
     name: "requireAuthSession",
     parameters: {
@@ -103,7 +108,7 @@ app.options("/hello-world", {
     handle: () => "Hello World!",
 })
 
-describe("class Apertum", () => {
+describe("class Workery", () => {
     test("[method] handle: success", async () => {
         const res1 = await app.handle({
             req: new Request("http://a.co/projects/123/todos?trackId=abc", {
@@ -118,6 +123,7 @@ describe("class Apertum", () => {
                     authorization: "Bearer myauthtoken",
                 },
             }),
+            ...cfargs,
         })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(200)
@@ -154,6 +160,7 @@ describe("class Apertum", () => {
                     authorization: "Bearer myauthtoken",
                 },
             }),
+            ...cfargs,
         })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(200)
@@ -191,6 +198,7 @@ describe("class Apertum", () => {
                     "Accept-Encoding": "gzip",
                 },
             }),
+            ...cfargs,
         })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(200)
@@ -214,12 +222,12 @@ describe("class Apertum", () => {
     })
 
     test("[method] handle: fail path not found", async () => {
-        const res1 = await app.handle({ req: new Request("http://a.co/") })
+        const res1 = await app.handle({ req: new Request("http://a.co/"), ...cfargs })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(404)
         expect(await res1.json()).toEqual({ detail: "Not Found" })
 
-        const res2 = await app.handle({ req: new Request("http://a.co/nopath") })
+        const res2 = await app.handle({ req: new Request("http://a.co/nopath"), ...cfargs })
         expect(res2).toBeTruthy()
         expect(res2.status).toBe(404)
         expect(await res2.json()).toEqual({ detail: "Not Found" })
@@ -239,6 +247,7 @@ describe("class Apertum", () => {
                     authorization: "Bearer myauthtoken",
                 },
             }),
+            ...cfargs,
         })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(409)
@@ -259,6 +268,7 @@ describe("class Apertum", () => {
                     authorization: "iminvalid",
                 },
             }),
+            ...cfargs,
         })
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(403)

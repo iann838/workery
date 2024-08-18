@@ -2,7 +2,6 @@
 export default {
     entryPoints: [
         'src/index.ts',
-        'src/adapters.ts',
         'src/applications.ts',
         'src/dependencies.ts',
         'src/helpers.ts',
@@ -14,7 +13,7 @@ export default {
         'src/types.ts',
     ],
     out: "docs/reference",
-    name: "Apertum",
+    name: "Workery",
     plugin: ["typedoc-plugin-markdown"],
     githubPages: false,
     readme: "none",
