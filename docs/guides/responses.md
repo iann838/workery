@@ -4,7 +4,7 @@ Module: `workery/responses`
 
 All responses are extended from the `Response` class of the Global Web API.
 
-By default, Workery uses `JSONResponse` to wrap return values of route handlers if it is not a `Response`. Available response classes:
+By default, Workery uses `JSONResponse` to wrap return values of route handlers if it is not a `Response`. Responses can be thrown in handlers to immediately interrupt the request flow and responding with it. Available response classes:
 
 ## JSONResponse
 

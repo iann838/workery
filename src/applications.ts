@@ -90,7 +90,7 @@ export class App<E = unknown> {
                     responseClass: HTMLResponse,
                     parameters: {},
                     handle: () =>
-                        renderSwagger(this.openapiUrl!, {
+                        renderSwagger(this.basePath + this.openapiUrl!, {
                             title: this.title,
                         }),
                 })
@@ -100,7 +100,7 @@ export class App<E = unknown> {
                     responseClass: HTMLResponse,
                     parameters: {},
                     handle: () =>
-                        renderRedoc(this.openapiUrl!, {
+                        renderRedoc(this.basePath + this.openapiUrl!, {
                             title: this.title,
                         }),
                 })

@@ -26,3 +26,7 @@ app.get("/greet", {
 
 export default app
 ```
+
+::: info
+Ensure that your `tsconfig.json` is has enabled `"moduleResolution": "Bundler"` for imports to work properly.
+:::
