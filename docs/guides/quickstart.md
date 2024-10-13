@@ -6,6 +6,10 @@
 yarn add workery
 ```
 
+::: about imports
+Ensure that your `tsconfig.json` has enabled `"moduleResolution": "Bundler"` for imports to work properly.
+:::
+
 ## Quick Start
 
 ```ts
@@ -26,7 +30,3 @@ app.get("/greet", {
 
 export default app
 ```
-
-::: info
-Ensure that your `tsconfig.json` is has enabled `"moduleResolution": "Bundler"` for imports to work properly.
-:::
