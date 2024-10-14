@@ -6,7 +6,7 @@
 yarn add workery
 ```
 
-::: INFO About imports
+::: info About imports
 Ensure that your `tsconfig.json` has enabled `"moduleResolution": "Bundler"` for imports to work properly.
 :::
 
