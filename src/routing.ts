@@ -88,9 +88,12 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
             else if (parameter.location == "body")
                 bodyParameter = parameter as BodyParameter<z.ZodType>
             else if (parameter.location == "header")
-                paramSchemas[parameter.location][parameter.options.altName ?? name.replace(/_/g, "-")] = parameter.schema!
+                paramSchemas[parameter.location][
+                    parameter.options.altName ?? name.replace(/_/g, "-")
+                ] = parameter.schema!
             else
-                paramSchemas[parameter.location][parameter.options.altName ?? name] = parameter.schema!
+                paramSchemas[parameter.location][parameter.options.altName ?? name] =
+                    parameter.schema!
         }
         let body: ZodRequestBody | undefined = undefined
         if (bodyParameter) {
