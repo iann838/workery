@@ -221,7 +221,7 @@ export class App<E = unknown> {
                     })
                     let res: Response
                     if (parseInfo.success) {
-                        res = await route.handle({...baseArgs, ...parseInfo.args})
+                        res = await route.handle({ ...baseArgs, ...parseInfo.args })
                         if (!(res instanceof Response))
                             res = new route.responseClass(res, { status: route.statusCode })
                     } else {

@@ -224,7 +224,10 @@ export async function parseArgs<Ps extends RouteParameters, E = unknown>(
             const dependencyParseInfo = await parseArgs(dependency.parameters, input)
             success &&= dependencyParseInfo.success
             if (dependencyParseInfo.success)
-                args[name] = await dependency.handle({...input.baseArgs, ...dependencyParseInfo.args}, input.later)
+                args[name] = await dependency.handle(
+                    { ...input.baseArgs, ...dependencyParseInfo.args },
+                    input.later
+                )
             else errors.push(...dependencyParseInfo.errors)
             continue
         } else {
