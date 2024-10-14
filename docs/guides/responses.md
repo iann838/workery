@@ -4,7 +4,7 @@ Module: `workery/responses`
 
 All responses are extended from the `Response` class of the Global Web API.
 
-Responses can be **thrown** in route, middleware, and dependency handlers to immediately interrupt the request flow and returning itself.
+Responses can be **thrown** in route, middleware, and dependency handlers to immediately interrupt the request flow and return itself.
 
 By default, Workery uses `JSONResponse` to wrap return values of route handlers if it is not a `Response`.
 
