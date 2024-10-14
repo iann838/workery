@@ -1,6 +1,6 @@
 {
     "name": "workery",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "OpenAPI based, fast to code, fully typed.",
     "type": "module",
     "main": "./dist/index.cjs",
