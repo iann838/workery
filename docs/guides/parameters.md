@@ -34,7 +34,9 @@ Example:
     }
 ```
 
-Header parameter keys automatically replaces `_` with `-` to ease definition of dash separated headers such as `X-Rate-Limit`.
+**Path parameters** in routes are defined using `{}` like `/entry/{id}`.
+
+**Header parameters** automatically replaces the `_` character with `-`, preventing syntax error when accessing a header such as `X-Rate-Limit` in the handler.
 
 An automatic coercion `options.preprocessor` is used if it detects that `isJsonCoercible(schema) == true` (from `workery/helpers`), qualified schemas includes but not limited to:
 -   `ZodNumber`

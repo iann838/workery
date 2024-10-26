@@ -14,18 +14,19 @@ Ensure that your `tsconfig.json` has enabled `"moduleResolution": "Bundler"` for
 
 ```ts
 import { App } from "workery"
-import { Query } from "workery/parameters"
-import { z } from "zod"
+import { Path, Query } from "workery/parameters"
+import z from "zod"
 
-const app = new App({})
+const app = new App<Env>({})
 
-app.get("/greet", {
+app.get("/entry/{id}", {
     parameters: {
-        name: Query(z.string())
+        id: Path(z.string().min(2).max(10)),
+        page: Query(z.number().int().min(0).max(20))
     },
-    handle: ({ name }) => {
-        return `Hello, ${name}!`
-    },
+    handle ({ id, page }) {
+        return { id, page }
+    }
 })
 
 export default app

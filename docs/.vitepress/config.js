@@ -19,6 +19,9 @@ export default {
                 activeMatch: ".",
             },
         ],
+        search: {
+            provider: 'local'
+        },
         socialLinks: [
             {
                 icon: "github",
