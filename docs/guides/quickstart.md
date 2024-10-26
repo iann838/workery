@@ -22,11 +22,11 @@ const app = new App<Env>({})
 app.get("/entry/{id}", {
     parameters: {
         id: Path(z.string().min(2).max(10)),
-        page: Query(z.number().int().min(0).max(20))
+        page: Query(z.number().int().min(0).max(20)),
     },
-    handle ({ id, page }) {
+    handle({ id, page }) {
         return { id, page }
-    }
+    },
 })
 
 export default app
