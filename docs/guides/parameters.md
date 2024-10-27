@@ -72,12 +72,12 @@ Example:
     }
 ```
 
-It accepts values other than Zod schemas and behaves differently:
--   `Body(String)`: Receives a text body, returns `await req.text()`.
--   `Body(Blob)`: Receives a binary file body, returns `await req.blob()`.
--   `Body(ReadableStream)`: Receives a binary file body, returns `req.body` without reading it.
+It also accepts values other than Zod schemas and behaves differently:
+-   `Body(String)`: Receives a text body, assigns the return value of `await req.text()`.
+-   `Body(Blob)`: Receives a binary file body, assigns the return value of `await req.blob()`.
+-   `Body(ReadableStream)`: Receives a binary file body, assigns the value of `req.body` without reading it.
 
-Body parameters can specify `options.mediaType`, defaults to `application/json`.
+Body parameters can specify the media type using `options.mediaType`, defaults to `application/json`.
 
 ## Depends
 
@@ -108,6 +108,8 @@ const doubleNumber = new Dependency({
 ```
 
 The parameter specifications in dependencies will be validated and rendered on the OAS of the route automatically. However, if you wish to use a parameter belonging to a dependency and for its typings to work, you must manually include it on the route's parameters using `...dependency.parameters`.
+
+For more implementation details about dependencies such as **after-request hooks** or **request flow interruption**, check out [Dependencies](./dependencies.md).
 
 ## Responds
 

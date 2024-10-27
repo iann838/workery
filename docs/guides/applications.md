@@ -9,7 +9,7 @@ Defines a standard application.
 Example:
 
 ```ts
-const app = new App({})
+const app = new App<Env>({})
 ```
 
 Init:
@@ -35,11 +35,14 @@ Init:
 The generic `E` corresponds to the `env` type definition and should be manually typed, this allow the env arg to be typed when implementing handlers. For example:
 
 ```ts
+// worker-configuration.d.ts
 interface Env {
     API_KEY: string
     D1: D1Database
 }
+```
 
+```ts
 const app = new App<Env>({})
 ```
 
@@ -125,7 +128,6 @@ Directly returning a response:
 import { PlainTextResponse } from "workery/responses"
 
 app.get("/greet", {
-    responseClass: PlainTextResponse,
     parameters: {
         name: Query(z.string())
     },
@@ -135,7 +137,7 @@ app.get("/greet", {
 })
 ```
 
-Throwing a response:
+Throwing a response (this is also how you raise http errors):
 
 ```ts
 import { JSONResponse } from "workery/responses"
@@ -153,14 +155,15 @@ app.get("/greet", {
 })
 ```
 
-Accessing global args (`req` and any extras depending on adapter):
+Accessing global args (`req`, `env` and `ctx`):
 
 ```ts
 app.get("/greet", {
     parameters: {
         name: Query(z.string())
     },
-    handle: ({ req, name }) => {
+    handle: ({ req, env, ctx, name }) => {
+        // ...
         return `Hello, ${name}! @ ${req.url}`
     },
 })

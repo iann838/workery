@@ -80,9 +80,28 @@ const requireAuth = new Dependency({
 })
 ```
 
+## Throwing responses
+
+Dependencies **cannot return responses**, it can only **throw responses** (http errors), immediately interrupting the request and returns the thrown response.
+
+```ts
+const requireAuth = new Dependency({
+    parameters: {
+        authorization: Header(z.string()),
+    },
+    handle: async ({ authorization }, later) => {
+        const user = await authenticateUser(authorization)
+        if (!user)
+            throw new JSONResponse({ detail: "Unauthenticated" }, { status: 401 })
+        // ...
+        return user
+    },
+})
+```
+
 ## After-request hook `later`
 
-Dependency handlers provides an after-request hook called `later` as the second argument, you could use this to create a database session and close it after finishing, let's see an example:
+Dependency handlers provides an after-request hook called `later` as the second argument, this could be used for inspecting the content of the response and performing actions based on it, let's see an example:
 
 ```ts
 const requireAuth = new Dependency({
@@ -94,6 +113,7 @@ const requireAuth = new Dependency({
         if (!user)
             throw new JSONResponse({ detail: "Unauthenticated" }, { status: 401 })
         later((res) => {
+            // logs out the user if the response status is >= 400.
             if (res.status >= 400)
                 await logoutUser(user)
         })
@@ -101,8 +121,5 @@ const requireAuth = new Dependency({
     },
 })
 ```
-
-On top of the explanation made earlier in this page:
-- It logs out the user if the response status is >= 400.
 
 Responses are read-only and cannot be modified or replaced within `later`.
