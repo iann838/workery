@@ -16,7 +16,7 @@ This class is used for structuring [big applications](./bigger-apps.md) into mul
 | `deprecated?` | `boolean` | Set the deprecated status to all routes. | `false` |
 | `includeInSchema?` | `boolean` | Set to include or exclude all routes from the generated OpenAPI document. | `true` |
 | `responses?` | `Record`\<`number`, `ResponseConfig`\> | Additional [response schemas](./responses.md#openapi-schemas) to all routes, shown in the generated OpenAPI document. | `{ 422: ... }` |
-| `defaultResponseClass?` | [`ResponseClass`](../modules/types.md#responseclass) | Default response class of all routes. | `JSONResponse` |
+| `defaultResponseClass?` | `ResponseClass` | Default response class of all routes. | `JSONResponse` |
 
 ## App Options
 
