@@ -18,7 +18,7 @@ To create a dependency you use the `Dependency` class to create a dependency ins
 
 The dependency init receives:
 
-- `of`: (optional) instance from which to inherit the `env` type (see [Dependency Env](./fetch_args.md#dependency-env)).
+- `of`: (optional) instance from which to inherit the `env` type (see [Dependency Env](./fetch-args.md#dependency-env)).
 - `name`: (optional) name of the middleware, this does not have any functional effect.
 - `parameters`: the usual parameters declaration, these parameters will also be part of the generated OpenAPI document for the routes that uses this dependency.
 - `handle`: the usual handler function, but with a **second optional positional argument**:
