@@ -18,7 +18,7 @@ export type ResponseClass = new (body: any, init?: ResponseInit) => Response
 
 export type Next = () => Promise<Response>
 
-export type Later = (fn: (res: Response | Error) => void) => void
+export type Later = (fn: (res: Response) => void) => void
 
 export type Preprocessor = <Out = any, In = any>(value: In) => Out | In
 
@@ -118,7 +118,7 @@ export type MiddlewareHandler<E = unknown> =
     | ((args: ArgsOf<{}, E>, next: Next) => Promise<Response>)
     | ((args: ArgsOf<{}, E>, next: Next) => Response)
 
-export type HeadlessRoute<R, Ps extends RouteParameters, E> = Omit<
+export type UnboundRoute<R, Ps extends RouteParameters, E> = Omit<
     InitOf<typeof Route<R, Ps, E>>,
     "method" | "path"
 >

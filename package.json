@@ -1,7 +1,7 @@
 {
     "name": "workery",
-    "version": "1.0.3",
-    "description": "OpenAPI based, fast to code, fully typed.",
+    "version": "1.1.1",
+    "description": "Modern web framework for building APIs on Cloudflare Workers.",
     "type": "module",
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
@@ -109,7 +109,7 @@
         "url": "https://github.com/iann838/workery/issues"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^4.20230518.0",
+        "@cloudflare/workers-types": "^4.20241004.0",
         "@commitlint/cli": "^13.1.0",
         "@commitlint/config-conventional": "^13.1.0",
         "@rollup/plugin-terser": "^0.2.1",
@@ -133,7 +133,6 @@
         "@asteasolutions/zod-to-openapi": "^5.3.1",
         "@types/cookie": "^0.6.0",
         "cookie": "^0.6.0",
-        "openapi3-ts": "^4.1.2",
         "zod": "^3.21.4"
     }
 }

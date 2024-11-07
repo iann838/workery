@@ -1,5 +1,4 @@
 import { z } from "zod"
-import type { ServerObject } from "openapi3-ts/oas31"
 import type { ResponseConfig, RouteConfig, ZodRequestBody } from "@asteasolutions/zod-to-openapi"
 import { JSONResponse } from "./responses"
 import type {
@@ -9,12 +8,36 @@ import type {
     ResponseClass,
     RouteHandler,
     RouteParameters,
+    UnboundRoute,
 } from "./types"
+import { Responds } from "./parameters"
 
 export function fixPathSlashes(path: string) {
+    if (path.length == 0 || path == "/") return "/"
     if (path[0] !== "/") path = "/" + path
+    if (path.startsWith("//")) path = path.slice(1)
     if (path[path.length - 1] === "/") path = path.slice(0, -1)
     return path
+}
+
+export function generateRouteSummary(method: HTTPMethod, path: string): string {
+    const methodToAction = {
+        GET: "Read",
+        POST: "Create",
+        PUT: "Update",
+        PATCH: "Modify",
+        DELETE: "Delete",
+        HEAD: "Head",
+        OPTIONS: "Check",
+        TRACE: "Trace",
+    }
+    return [
+        methodToAction[method],
+        ...path
+            .split("/")
+            .map((s) => s && s[0].toUpperCase() + s.slice(1))
+            .filter((s) => s),
+    ].join(" ")
 }
 
 export class Route<R, Ps extends RouteParameters, E = unknown> {
@@ -25,7 +48,6 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
     summary: string
     description: string
     deprecated: boolean
-    servers?: ServerObject[]
     responses: Record<number, ResponseConfig>
     statusCode: number
     includeInSchema: boolean
@@ -41,7 +63,6 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
         summary?: string
         description?: string
         deprecated?: boolean
-        servers?: ServerObject[]
         responses?: Record<number, ResponseConfig>
         includeInSchema?: boolean
         statusCode?: number
@@ -53,10 +74,9 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
         this.path = fixPathSlashes(init.path)
         this.name = init.name
         this.tags = init.tags ?? []
-        this.summary = init.summary ?? ""
+        this.summary = init.summary ?? generateRouteSummary(this.method, this.path)
         this.description = init.description ?? ""
         this.deprecated = init.deprecated ?? false
-        this.servers = init.servers
         this.responses = init.responses ?? {}
         this.includeInSchema = init.includeInSchema ?? true
         this.statusCode = init.statusCode ?? 200
@@ -129,7 +149,6 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
             summary: this.summary,
             description: this.description,
             deprecated: this.deprecated,
-            servers: this.servers,
             request: {
                 body: body,
                 params: z.object(paramSchemas.path),
@@ -174,13 +193,13 @@ export function searchParamsToQueries(searchParams: URLSearchParams): Record<str
     return queries
 }
 
-export class Router<E = unknown> {
+export class RouteMatcher<E = unknown> {
     routes: Route<any, any, E>[]
-    private matcher: RouteNode<E>
+    private tree: RouteNode<E>
 
     constructor() {
         this.routes = []
-        this.matcher = new RouteNode("")
+        this.tree = new RouteNode("")
     }
 
     *[Symbol.iterator](): IterableIterator<Route<any, any, E>> {
@@ -197,17 +216,17 @@ export class Router<E = unknown> {
         for (const route of routes) {
             this.routes.push(route)
             const nodes = route.path.split("/").slice(1)
-            let matcher = this.matcher
+            let tree = this.tree
             const paramNames = []
             for (let [index, node] of nodes.entries()) {
                 if (node[0] == "{" && node[node.length - 1] == "}") {
                     paramNames.push(node.slice(1, -1))
                     node = "{}"
                 }
-                matcher = matcher.touch(node)
+                tree = tree.touch(node)
                 if (index == nodes.length - 1) {
-                    matcher.routes[route.method] = route
-                    matcher.paramNames = paramNames
+                    tree.routes[route.method] = route
+                    tree.paramNames = paramNames
                 }
             }
         }
@@ -220,24 +239,132 @@ export class Router<E = unknown> {
     ): [Route<any, any, E> | undefined | null, Record<string, string>] {
         const nodes = fixPathSlashes(path).split("/").slice(1)
         const paramValues: string[] = []
-        let matcher = this.matcher
+        let tree = this.tree
         for (const [index, node] of nodes.entries()) {
-            let nextMatcher = matcher.match(node)
+            let nextMatcher = tree.match(node)
             if (!nextMatcher) return [undefined, {}]
-            matcher = nextMatcher
-            if (matcher.name == "{}") paramValues.push(node)
+            tree = nextMatcher
+            if (tree.name == "{}") paramValues.push(node)
             if (index == nodes.length - 1) {
-                if (!matcher.routes[method]) {
-                    if (Object.keys(matcher.routes).length == 0) return [undefined, {}]
+                if (!tree.routes[method]) {
+                    if (Object.keys(tree.routes).length == 0) return [undefined, {}]
                     return [null, {}]
                 }
                 const params: Record<string, string> = {}
-                for (let i = 0; i < matcher.paramNames.length; i++) {
-                    params[matcher.paramNames[i]] = paramValues[i]
+                for (let i = 0; i < tree.paramNames.length; i++) {
+                    params[tree.paramNames[i]] = paramValues[i]
                 }
-                return [matcher.routes[method], params]
+                return [tree.routes[method], params]
             }
         }
         return [undefined, {}]
+    }
+}
+
+export class Router<E = unknown> {
+    tags: string[]
+    deprecated: boolean
+    includeInSchema: boolean
+    responses: Record<number, ResponseConfig>
+    defaultResponseClass: ResponseClass
+    routeMatcher: RouteMatcher<E>
+
+    constructor(init: {
+        tags?: string[]
+        deprecated?: boolean
+        includeInSchema?: boolean
+        responses?: Record<number, ResponseConfig>
+        defaultResponseClass?: ResponseClass
+    }) {
+        this.tags = init.tags ?? []
+        this.deprecated = init.deprecated ?? false
+        this.includeInSchema = init.includeInSchema ?? true
+        this.defaultResponseClass = init.defaultResponseClass ?? JSONResponse
+        this.responses = init.responses ?? {
+            422: Responds(
+                z.object({
+                    detail: z.array(
+                        z.object({
+                            location: z.string(),
+                            name: z.string(),
+                            issues: z.array(z.any()),
+                        })
+                    ),
+                }),
+                { description: "Validation Error", mediaType: "application/json" }
+            ),
+        }
+        this.routeMatcher = new RouteMatcher<E>()
+    }
+
+    get<R, Ps extends RouteParameters>(
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        return this.route("GET", path, unboundRoute)
+    }
+    post<R, Ps extends RouteParameters>(
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        return this.route("POST", path, unboundRoute)
+    }
+    put<R, Ps extends RouteParameters>(
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        return this.route("PUT", path, unboundRoute)
+    }
+    delete<R, Ps extends RouteParameters>(
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        return this.route("DELETE", path, unboundRoute)
+    }
+    patch<R, Ps extends RouteParameters>(
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        return this.route("PATCH", path, unboundRoute)
+    }
+    head<R, Ps extends RouteParameters>(
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        return this.route("HEAD", path, unboundRoute)
+    }
+    trace<R, Ps extends RouteParameters>(
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        return this.route("TRACE", path, unboundRoute)
+    }
+    options<R, Ps extends RouteParameters>(
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        return this.route("OPTIONS", path, unboundRoute)
+    }
+
+    route<R, Ps extends RouteParameters>(
+        method: HTTPMethod,
+        path: string,
+        unboundRoute: UnboundRoute<R, Ps, E>
+    ): Route<R, Ps, E> {
+        const route = new Route({
+            method: method,
+            path: path,
+            deprecated: this.deprecated,
+            includeInSchema: this.includeInSchema,
+            responseClass: this.defaultResponseClass,
+            ...unboundRoute,
+            tags: [...this.tags, ...(unboundRoute.tags ?? [])],
+            responses: {
+                ...this.responses,
+                ...unboundRoute.responses,
+            },
+        })
+        this.routeMatcher.push(route)
+        return route
     }
 }

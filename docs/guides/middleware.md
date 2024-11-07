@@ -1,95 +1,78 @@
 # Middleware
 
-Module: `workery/middleware`
+You can add middleware to **Workery** applications.
 
-A "middleware" is a function that works with every request before it is processed by any specific route handler. And also with every response before returning it.
+A "middleware" is a function that works with every **request** before it is processed by any route handler function regardless of the state and content. And also with every **response** before returning it.
 
-- It takes each request that comes to your application.
-- It can then do something (or replace it) to that request or run any needed code.
-- Then it passes the request to be processed by the rest of the application.
-- It then takes the returned response.
-- It can do something to that response (or replace it) or run any needed code.
-- Then it returns the response.
+- It takes each **request** that comes to your application.
+- It can then do something with that request or run any needed code.
+- Then it passes the **request** to be processed by route handlers.
+- It then takes the **response** returned by route handlers.
+- It can do something to that **response** or run any needed code.
+- Then it returns the **response**.
 
-## Defining middleware
+## Declaration
 
-Middleware definition is similar to dependencies and routes, with a few differences:
-- Route config is not used.
-- Does not have parameter definitions.
-- Provides a must call promise `next`.
+To create a middleware you use the `Middleware` class to create a middleware instance.
 
-Init:
+The middleware init receives:
 
-| Key | Type | Descrition | Default |
-| :-- | :--- | :--------- | :------ |
-| `of?` | `App<E>` | Env type inference (generic `E`) purpose only. |  |
-| `name?` | `string` | Identifier purpose only. |  |
-| `handle` | `MiddlewareHandler<E>` | Middleware handler function |  |
+- `name`: (optional) name of the middleware, this does not have any functional effect.
+- `handle`: the usual handler function, but with a **second positional argument**:
+    - `next`: async function for calling the next handler in line, this could be the next middleware handler or the route handler itself. Returns a response.
 
 Example:
 
-```ts
-const sampleMiddleware = new Middleware({
-    name: "mymiddleware",
-    handle: async ({ req }, next: Next) => {
-        // do something with req
-        let res = await next()
-        // do something with res
-        return res
+```ts {5-7}
+import { Middleware } from "workery"
+
+const responseAddDate = new Middleware<Env>({
+    handle: async ({}, next) => {
+        const res = await next()
+		res.headers.set("Date", new Date().toISOString())
+		return res
     },
 })
 ```
 
-Accessing adapter global args:
+This example adds a `Date` header to all responses of the app. Remember to add the middleware to the app init for it to take effect.
 
-```ts
-const requireAuth = new Middleware({
-    of: new App<Env>({}), // or simply pass `app`
-    handle: async ({ req, env }) => {
-        // ...
+```ts {2-4}
+const app = new App<Env>({
+	middleware: [
+		responseAddDate,
+	]
+})
+```
+
+::: tip Middleware Order
+The order of your middleware array is also the call order, the first middleware in the array is the first one to be called before route handlers and last one to be called after route handlers have returned a response.
+:::
+
+## Before & After Request
+
+You can add code to be run before the request is processed by any route handler.
+
+And also after the response is generated, before returning it.
+
+```ts {3-6}
+const myMiddleware = new Middleware<Env>({
+    handle: async ({ req, env, ctx }, next) => {
+        // code executed before route handlers
+        const res = await next()
+        // code executed after route handlers
+		return res
     },
 })
 ```
 
-## CORSMiddleware
+::: warning Runtime Gotchas
+In Cloudflare Workers, `Request` (unpack arg `req`) objects are immutable, modifying this object results in error. Also, [performance and timers](https://developers.cloudflare.com/workers/runtime-apis/performance/) only advance or increment after I/O occurs.
+:::
 
-Adds response CORS headers to application.
+## Built-in Middleware
 
-Signature:
+**Workery** provides built-in middleware for common use-cases (even though they are not necessarily common in the context of Cloudflare Workers):
 
-```ts
-const CORSMiddleware = (options?: {
-    origin: string | string[] | ((origin: string) => string | undefined | null)
-    allowMethods?: string[]
-    allowHeaders?: string[]
-    maxAge?: number
-    credentials?: boolean
-    exposeHeaders?: string[]
-}) => Middleware
-```
-
-Usage:
-
-```ts
-const app = new App({
-    middleware: [CORSMiddleware({ origin: ["http://a.co"] })],
-})
-```
-
-## CompressMiddleware
-
-Adds response compression to application based on `Accept-Encoding` header.
-
-Signature:
-
-```ts
-const CompressMiddleware = (format: CompressionFormat) => Middleware
-```
-
-Usage:
-
-```ts
-const app = new App({
-    middleware: [CompressMiddleware("gzip")],
-})
-```
+- [CORS (Cross-Origin Resource Sharing)](./cors.md)
+- [Compression](./compression.md)

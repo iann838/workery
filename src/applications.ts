@@ -1,4 +1,8 @@
-import { OpenAPIRegistry, OpenApiGeneratorV31 } from "@asteasolutions/zod-to-openapi"
+import {
+    OpenAPIRegistry,
+    OpenApiGeneratorV31,
+    ResponseConfig,
+} from "@asteasolutions/zod-to-openapi"
 import cookie from "cookie"
 import type {
     ContactObject,
@@ -11,23 +15,16 @@ import { Middleware } from "./middleware"
 import { parseArgs } from "./parameters"
 import { HTMLResponse, JSONResponse } from "./responses"
 import { Route, Router, searchParamsToQueries } from "./routing"
-import type {
-    ArgsOf,
-    ExceptionHandler,
-    HeadlessRoute,
-    HTTPMethod,
-    ResponseClass,
-    RouteParameters,
-} from "./types"
+import type { ArgsOf, ExceptionHandler, RouteParameters, ResponseClass } from "./types"
 import { renderSwagger, renderRedoc } from "./renderers"
 import { createResolveLater, baseExceptionHandler } from "./helpers"
 
-export class App<E = unknown> {
-    basePath: string
+export class App<E = unknown> extends Router<E> {
+    rootPath: string
     title: string
     description: string
     version: string
-    tags: TagObject[]
+    tagsInfo: TagObject[]
     servers?: ServerObject[]
     contact?: ContactObject
     license?: LicenseObject
@@ -36,18 +33,16 @@ export class App<E = unknown> {
     swaggerUrl: string | null
     redocUrl: string | null
     middleware: Middleware<E>[]
-    defaultResponseClass: ResponseClass
     exceptionHandler: ExceptionHandler<E>
-
-    router: Router<E>
+    private _rootPathRegex: RegExp
     private _openapi?: OpenAPIObject
 
     constructor(init: {
-        basePath?: string
+        rootPath?: string
         title?: string
         description?: string
         version?: string
-        tags?: TagObject[]
+        tagsInfo?: TagObject[]
         servers?: ServerObject[]
         contact?: ContactObject
         license?: LicenseObject
@@ -56,15 +51,21 @@ export class App<E = unknown> {
         swaggerUrl?: string | null
         redocUrl?: string | null
         middleware?: Middleware<E>[]
-        defaultResponseClass?: ResponseClass
         exceptionHandler?: ExceptionHandler<E>
+        tags?: string[]
+        deprecated?: boolean
+        includeInSchema?: boolean
+        responses?: Record<number, ResponseConfig>
+        defaultResponseClass?: ResponseClass
     }) {
-        this.basePath = init.basePath ?? ""
-        this.title = init.title ?? "Untitled"
+        super(init)
+        this.rootPath = init.rootPath ?? "/"
+        this._rootPathRegex = new RegExp("^" + this.rootPath)
+        this.title = init.title ?? "Workery API"
         this.description = init.description ?? ""
         this.version = init.version ?? "0.1.0"
-        this.tags = init.tags ?? []
-        this.servers = init.servers ?? [{ url: "/" }]
+        this.tagsInfo = init.tagsInfo ?? []
+        this.servers = [{ url: this.rootPath }, ...(init.servers ?? [])]
         this.contact = init.contact
         this.license = init.license
         this.termsOfService = init.termsOfService
@@ -72,10 +73,7 @@ export class App<E = unknown> {
         this.swaggerUrl = init.swaggerUrl === null ? null : (init.swaggerUrl ?? "/docs")
         this.redocUrl = init.redocUrl === null ? null : (init.redocUrl ?? "/redoc")
         this.middleware = init.middleware ?? []
-        this.defaultResponseClass = init.defaultResponseClass ?? JSONResponse
         this.exceptionHandler = init.exceptionHandler ?? baseExceptionHandler
-
-        this.router = new Router<E>()
 
         if (this.openapiUrl) {
             this.get(this.openapiUrl, {
@@ -90,7 +88,7 @@ export class App<E = unknown> {
                     responseClass: HTMLResponse,
                     parameters: {},
                     handle: () =>
-                        renderSwagger(this.basePath + this.openapiUrl!, {
+                        renderSwagger(this.openapiUrl!, {
                             title: this.title,
                         }),
                 })
@@ -100,82 +98,24 @@ export class App<E = unknown> {
                     responseClass: HTMLResponse,
                     parameters: {},
                     handle: () =>
-                        renderRedoc(this.basePath + this.openapiUrl!, {
+                        renderRedoc(this.openapiUrl!, {
                             title: this.title,
                         }),
                 })
         }
     }
 
-    get<R, Ps extends RouteParameters>(
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        return this.route("GET", path, headlessRoute)
-    }
-    post<R, Ps extends RouteParameters>(
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        return this.route("POST", path, headlessRoute)
-    }
-    put<R, Ps extends RouteParameters>(
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        return this.route("PUT", path, headlessRoute)
-    }
-    delete<R, Ps extends RouteParameters>(
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        return this.route("DELETE", path, headlessRoute)
-    }
-    patch<R, Ps extends RouteParameters>(
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        return this.route("PATCH", path, headlessRoute)
-    }
-    head<R, Ps extends RouteParameters>(
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        return this.route("HEAD", path, headlessRoute)
-    }
-    trace<R, Ps extends RouteParameters>(
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        return this.route("TRACE", path, headlessRoute)
-    }
-    options<R, Ps extends RouteParameters>(
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        return this.route("OPTIONS", path, headlessRoute)
-    }
-
-    route<R, Ps extends RouteParameters>(
-        method: HTTPMethod,
-        path: string,
-        headlessRoute: HeadlessRoute<R, Ps, E>
-    ): Route<R, Ps, E> {
-        this._openapi = undefined
-        const route = new Route({
-            method: method,
-            path: this.basePath + path,
-            responseClass: this.defaultResponseClass,
-            ...headlessRoute,
-        })
-        this.router.push(route)
-        return route
+    include(pathPrefix: string, router: Router<E>) {
+        for (const route of router.routeMatcher) {
+            const includeRoute = new Route({ ...route, path: pathPrefix + route.path })
+            this.routeMatcher.push(includeRoute)
+        }
     }
 
     openapi(): OpenAPIObject {
         if (this._openapi) return this._openapi
         const registry = new OpenAPIRegistry()
-        for (const route of this.router) {
+        for (const route of this.routeMatcher) {
             if (route.includeInSchema) registry.registerPath(route.openapi())
         }
         const generator = new OpenApiGeneratorV31(registry.definitions)
@@ -190,7 +130,7 @@ export class App<E = unknown> {
                 termsOfService: this.termsOfService,
             },
             servers: this.servers,
-            tags: this.tags,
+            tags: this.tagsInfo,
         })
         return this._openapi
     }
@@ -199,7 +139,11 @@ export class App<E = unknown> {
         const { req } = baseArgs
         try {
             const url = new URL(req.url)
-            const [route, params] = this.router.match(req.method, url.pathname)
+            console.log(url.pathname, url.pathname.replace(this._rootPathRegex, ""))
+            const [route, params] = this.routeMatcher.match(
+                req.method,
+                url.pathname.replace(this._rootPathRegex, "")
+            )
             if (route === undefined)
                 return new JSONResponse({ detail: "Not Found" }, { status: 404 })
             if (route === null)
@@ -230,8 +174,10 @@ export class App<E = unknown> {
                     resolve(res)
                     return res
                 } catch (e: any) {
-                    resolve(e)
-                    if (e instanceof Response) return e
+                    if (e instanceof Response) {
+                        resolve(e)
+                        return e
+                    }
                     throw e
                 }
             }

@@ -1,14 +1,15 @@
-import type { App } from "./applications"
+import type { Of } from "./helpers"
+import type { Router } from "./routing"
 import type { DependencyHandler, RouteParameters } from "./types"
 
 export class Dependency<R, Ps extends RouteParameters, E = unknown> {
-    of?: App<E>
+    of?: Router<E> | Of<E>
     name?: string
     parameters: Ps
     handle: DependencyHandler<R, Ps, E>
 
     constructor(init: {
-        of?: App<E>
+        of?: Router<E> | Of<E>
         name?: string
         parameters: Ps
         handle: DependencyHandler<R, Ps, E>

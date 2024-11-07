@@ -1,8 +1,8 @@
 import type { ExecutionContext } from "@cloudflare/workers-types"
 import { z } from "zod"
-import { Dependency } from "./dependencies"
-import { Query } from "./parameters"
-import { createResolveLater } from "./helpers"
+import { Dependency } from "../src/dependencies"
+import { Query } from "../src/parameters"
+import { createResolveLater } from "../src/helpers"
 
 const cfargs = {
     env: undefined,

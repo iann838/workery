@@ -1,5 +1,7 @@
 import { z } from "zod"
-import { createResolveLater, isJsonCoercible, jsonCoerce } from "./helpers"
+import { createObjectPartial, createResolveLater, isJsonCoercible, jsonCoerce, Of } from "../src/helpers"
+
+new Of<{}>()
 
 describe("function jsonCoerce", () => {
     test("[invocation]: return value", () => {
@@ -78,5 +80,18 @@ describe("function createResolveLater", () => {
         resolve(new Response(""))
         await new Promise((r) => setTimeout(r, 10))
         expect(data.num).toBe(3)
+    })
+})
+
+describe("function createObjectPartial", () => {
+    test("[invocation]: return value", () => {
+        const partial = createObjectPartial({ a: "text", b: 1 })
+        expect(partial).toBeInstanceOf(Function)
+    })
+
+    test("[return]: data mutation", () => {
+        const partial = createObjectPartial({ a: "text", b: 1 })
+        const complete = partial({ a: "text2", c: 2 })
+        expect(complete).toEqual({ a: "text2", b: 1, c: 2 })
     })
 })

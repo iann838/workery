@@ -1,5 +1,4 @@
-import { z } from "zod"
-import { HTMLResponse, JSONResponse, PlainTextResponse } from "./responses"
+import { HTMLResponse, JSONResponse, PlainTextResponse } from "../src/responses"
 
 describe("class JSONResponse", () => {
     test("[constructor]: operational equality to Response.json", async () => {

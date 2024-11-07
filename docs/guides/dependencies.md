@@ -1,10 +1,8 @@
 # Dependencies
 
-Module: `workery/dependencies`
-
 **Dependency Injection** means, in programming, that there is a way for your code (in this case, your route handlers) to declare things that it requires to work and use: "dependencies".
 
-And then, that workflow (in this case **Workery**) will take care of doing what is needed to provide your code with those declared dependencies ("inject" the dependencies).
+And then, that system (in this case **Workery**) will take care of doing what is needed to provide your code with those declared dependencies ("inject" the dependencies).
 
 This is very useful when you need to:
 
@@ -14,32 +12,32 @@ This is very useful when you need to:
 - And many other things...
 - All these, while minimizing code repetition.
 
-## Defining dependencies
+## Declaration
 
-Dependency definition feels similar to routes, with a few differences:
-- Route config is not used.
-- The return value is not a Response.
-- Provides am after-request hook `later`.
+To create a dependency you use the `Dependency` class to create a dependency instance.
 
-Init:
+The dependency init receives:
 
-| Key | Type | Descrition | Default |
-| :-- | :--- | :--------- | :------ |
-| `of?` | `App<E>` | Env type inference (generic `E`) purpose only. |  |
-| `name?` | `string` | Identifier purpose only. |  |
-| `parameters` | `Ps extends RouteParameters` | Parameter specification. See [Parameters](/guides/parameters.md). |  |
-| `handle` | `DependencyHandler<R, Ps, E>` | Dependency handler function |  |
-
+- `of`: (optional) instance from which to inherit the `env` type (see [Dependency Env](./fetch_args.md#dependency-env)).
+- `name`: (optional) name of the middleware, this does not have any functional effect.
+- `parameters`: the usual parameters declaration, these parameters will also be part of the generated OpenAPI document for the routes that uses this dependency.
+- `handle`: the usual handler function, but with a **second optional positional argument**:
+    - `later`: after-request hook, void function receiving a response, [see details below](#after-request-hook).
 
 Example:
 
-```ts
+```ts {11-14}
+import { App, Dependency } from "workery"
+
+const app = new App<Env>({})
+
 const requireAuth = new Dependency({
+    of: app,
     parameters: {
         authorization: Header(z.string()),
     },
-    handle: async ({ authorization }) => {
-        const user = await authenticateUser(authorization)
+    handle: async ({ authorization, env }) => {
+        const user = /* authenticate user with header content */
         if (!user)
             throw new JSONResponse({ detail: "Unauthenticated" }, { status: 401 })
         return user
@@ -47,79 +45,76 @@ const requireAuth = new Dependency({
 })
 ```
 
-```ts
-    // ...
+This example creates a dependency that requires an `authorization` header, that is then used for authenticating the user, return the user object if it was successfully authenticated, otherwise throw an HTTP 401 response.
+
+To inject this dependency to routes, declare it as a `Depends` parameter:
+
+```ts {5,7-8}
+import { Depends } from "workery/parameters"
+
+app.get("/", {
     parameters: {
-        user: Depends(requireAuth)
-    }
+		user: Depends(requireAuth),
+	},
     handle: ({ user }) => {
-        // User is authenticated
+        return { message: `Hello ${user}` }
+    },
+})
+```
+
+## Nested Dependencies
+
+You can create **dependencies** that have sub-dependencies.
+
+They can be as **deep** as you need them to be.
+
+```ts
+const requireNestedNest = new Dependency({
+    parameters: {
+        one: Query(z.string()),
+        two: Query(z.string())
+    },
+    handle: ({ one, two }) => {
+        return { one, two }
     }
-```
-
-What this dependency injection means:
-- It expects an additional header `Authorization`.
-- It attempts to authenticate a user using the header.
-- If the authentication fails, throws a 401 response.
-- If the authentication succeeds, return the authenticated user.
-- The route handler now has access to `user` param, and is sure that the user is authenticated.
-
-Parameter definitions of dependencies are validated and rendered on the OAS of the route.
-
-Accessing adapter global args:
-
-```ts
-const requireAuth = new Dependency({
-    of: new App<Env>({}), // or simply pass `app`
-    parameters: {
-        authorization: Header(z.string()),
-    },
-    handle: async ({ env, authorization }) => {
-        // ...
-    },
 })
+
+const requireNested = new Dependency({
+    parameters: {
+        three: Depends(requireNestedNest),
+        zero: Query(z.number())
+    },
+    handle: ({ three, zero }) => {
+        return { three, zero }
+    }
+})
+
+// Inferred type:
+// { zero: number, three: { one: string, two: string } }
 ```
 
-## Throwing responses
+All declared parameters in nested dependencies will be also be rendered on the OpenAPI document.
 
-Dependencies **cannot return responses**, it can only **throw responses** (http errors), immediately interrupting the request and returns the thrown response.
+## After-Request Hook
 
-```ts
+Dependency handlers has a second optional argument, this argument is an after-request hook named `later`, this hook performs actions after the request has been processed an a response has been returned.
+
+Example:
+
+```ts{9-12}
 const requireAuth = new Dependency({
     parameters: {
         authorization: Header(z.string()),
     },
-    handle: async ({ authorization }, later) => {
-        const user = await authenticateUser(authorization)
+    handle: async ({ authorization, env }, later) => {
+        const user = /* authenticate user with header content */
         if (!user)
             throw new JSONResponse({ detail: "Unauthenticated" }, { status: 401 })
-        // ...
-        return user
-    },
-})
-```
-
-## After-request hook `later`
-
-Dependency handlers provides an after-request hook called `later` as the second argument, this could be used for inspecting the content of the response and performing actions based on it, let's see an example:
-
-```ts
-const requireAuth = new Dependency({
-    parameters: {
-        authorization: Header(z.string()),
-    },
-    handle: async ({ authorization }, later) => {
-        const user = await authenticateUser(authorization)
-        if (!user)
-            throw new JSONResponse({ detail: "Unauthenticated" }, { status: 401 })
-        later((res) => {
-            // logs out the user if the response status is >= 400.
+        later(async (res) => {
             if (res.status >= 400)
-                await logoutUser(user)
+                // do something to user if the response status is >= 400.
         })
         return user
     },
 })
 ```
-
-Responses are read-only and cannot be modified or replaced within `later`.

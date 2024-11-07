@@ -28,7 +28,7 @@ export function isJsonCoercible(schema: z.ZodType): boolean {
     )
 }
 
-export function createResolveLater<T = Response | Error>(): [
+export function createResolveLater<T = Response>(): [
     (res: T) => void,
     (fn: (v: T) => void) => void,
 ] {
@@ -45,3 +45,9 @@ export function baseExceptionHandler<E>(_: ArgsOf<{}, E>, e: any) {
     console.error(e)
     return new Response("Internal Server Error", { status: 500 })
 }
+
+export function createObjectPartial<T1 extends Record<any, any>>(base: T1) {
+    return <T2 extends Record<any, any>>(final: T2): T1 & T2 => ({ ...base, ...final })
+}
+
+export class Of<E> {}

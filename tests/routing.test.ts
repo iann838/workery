@@ -1,4 +1,4 @@
-import { Route, RouteNode, Router, fixPathSlashes, searchParamsToQueries } from "./routing"
+import { Route, RouteNode, RouteMatcher, fixPathSlashes, searchParamsToQueries, generateRouteSummary } from "../src/routing"
 
 const nullHandler = async () => null
 
@@ -7,6 +7,21 @@ describe("function fixPathSlashes", () => {
         expect(fixPathSlashes("path/to/route")).toBe("/path/to/route")
         expect(fixPathSlashes("/path/to/route/")).toBe("/path/to/route")
         expect(fixPathSlashes("path/to/route/")).toBe("/path/to/route")
+    })
+    test("[invocation]: return value edge cases", () => {
+        expect(fixPathSlashes("")).toBe("/")
+        expect(fixPathSlashes("/")).toBe("/")
+        expect(fixPathSlashes("//path/to/route/")).toBe("/path/to/route")
+    })
+})
+
+describe("function generateRouteSummary", () => {
+    test("[invocation]: return value", () => {
+        expect(generateRouteSummary("GET", "path/to/route")).toBe("Read Path To Route")
+        expect(generateRouteSummary("POST", "/path/to/route/")).toBe("Create Path To Route")
+        expect(generateRouteSummary("PUT", "path/to/route/")).toBe("Update Path To Route")
+        expect(generateRouteSummary("PATCH", "//route/")).toBe("Modify Route")
+        expect(generateRouteSummary("DELETE", "")).toBe("Delete")
     })
 })
 
@@ -55,9 +70,9 @@ describe("function searchParamsToQueries", () => {
     })
 })
 
-describe("class Router", () => {
+describe("class RouteMatcher", () => {
     test("[method] push: mutation 0 params", () => {
-        const router = new Router()
+        const router = new RouteMatcher()
         const route = new Route({
             method: "GET",
             path: "/path/to/route",
@@ -71,7 +86,7 @@ describe("class Router", () => {
     })
 
     test("[method] push: mutation 2 params", () => {
-        const router = new Router()
+        const router = new RouteMatcher()
         const route = new Route({
             method: "GET",
             path: "/path/{to}/route/{target}",
@@ -84,7 +99,7 @@ describe("class Router", () => {
         expect(params).toStrictEqual({ to: "123", target: "abc" })
     })
 
-    const router = new Router()
+    const router = new RouteMatcher()
     const route1 = new Route({
         method: "GET",
         path: "/path/to/route",

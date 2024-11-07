@@ -1,22 +1,33 @@
 export default {
     title: 'Workery',
-    description: 'OpenAPI based, fast to code, fully typed.',
+    description: 'Modern web framework for Cloudflare Workers.',
+    head: [['link', { rel: 'icon', href: '/icon.svg' }]],
+    cleanUrls: true,
     themeConfig: {
-        logo: "https://www.openapis.org/wp-content/uploads/sites/3/2016/11/favicon.png",
+        logo: "/icon.svg",
         siteTitle: "Workery",
         nav: [
             {
                 text: "Guides",
-                link: "/guides/quickstart.md"
+                link: "/guides/first-steps.md",
+                activeMatch: "/guides/*"
             },
             {
                 text: "Reference",
-                link: "/reference/README.md"
+                link: "/reference/modules/",
+                activeMatch: "/reference/*"
             },
             {
-                text: "Star me!",
+                text: "1.1.1 (latest)",
+                items: [
+                    { text: "Releases", link: "https://github.com/iann838/workery/releases" },
+                    { text: "Migrations", link: "/migrations/1_0-1_1.md" }
+                ]
+            },
+            {
+                text: "Star ⭐",
                 link: "https://github.com/iann838/workery",
-                activeMatch: ".",
+                activeMatch: "."
             },
         ],
         search: {
@@ -32,56 +43,60 @@ export default {
             "/guides/": {
                 items: [
                     {
-                        text: 'Introduction',
+                        text: 'User Guides',
                         collapsed: false,
                         items: [
                             {
-                                text: "Get Started",
-                                link: '/guides/quickstart.md'
-                            },
-                        ]
-                    },
-                    {
-                        text: 'Usage',
-                        collapsed: false,
-                        items: [
-                            {
-                                text: "Applications",
-                                link: "/guides/applications.md",
+                                text: "First Steps",
+                                link: '/guides/first-steps.md'
                             },
                             {
-                                text: "Parameters",
-                                link: "/guides/parameters.md",
+                                text: "Basic Parameters",
+                                link: '/guides/basic-params.md'
                             },
                             {
-                                text: "Dependencies",
-                                link: "/guides/dependencies.md",
+                                text: "Request Body",
+                                link: '/guides/request-body.md'
+                            },
+                            {
+                                text: "Fetch Arguments",
+                                link: '/guides/fetch-args.md'
                             },
                             {
                                 text: "Middleware",
-                                link: "/guides/middleware.md",
+                                link: '/guides/middleware.md'
+                            },
+                            {
+                                text: "Dependencies",
+                                link: '/guides/dependencies.md'
                             },
                             {
                                 text: "Responses",
-                                link: "/guides/responses.md",
-                            },
-                        ]
-                    },
-                    {
-                        text: 'Others',
-                        collapsed: false,
-                        items: [
-                            {
-                                text: "Helpers",
-                                link: '/guides/helpers.md'
+                                link: '/guides/responses.md'
                             },
                             {
-                                text: "Renderers",
-                                link: '/guides/renderers.md'
+                                text: "Handling Errors",
+                                link: '/guides/handling-errors.md'
                             },
                             {
-                                text: "Routing",
-                                link: '/guides/routing.md'
+                                text: "Bigger Applications",
+                                link: '/guides/bigger-apps.md'
+                            },
+                            {
+                                text: "App Router Options",
+                                link: '/guides/app-router-options.md'
+                            },
+                            {
+                                text: "CORS Support",
+                                link: '/guides/cors.md'
+                            },
+                            {
+                                text: "Compression",
+                                link: '/guides/compression.md'
+                            },
+                            {
+                                text: "Code Duplication",
+                                link: '/guides/code-duplication.md'
                             },
                         ]
                     },
@@ -89,16 +104,32 @@ export default {
             },
             "/reference/": {
                 items: [
-                    { text: "index", link: "/reference/modules/" },
-                    { text: "applications", link: "/reference/modules/applications.md" },
-                    { text: "dependencies", link: "/reference/modules/dependencies.md" },
-                    { text: "helpers", link: "/reference/modules/helpers.md" },
-                    { text: "middleware", link: "/reference/modules/middleware.md" },
-                    { text: "parameters", link: "/reference/modules/parameters.md" },
-                    { text: "renderers", link: "/reference/modules/renderers.md" },
-                    { text: "responses", link: "/reference/modules/responses.md" },
-                    { text: "routing", link: "/reference/modules/routing.md" },
-                    { text: "types", link: "/reference/modules/types.md" },
+                    {
+                        text: "Reference",
+                        collapsed: false,
+                        items: [
+                            { text: "index", link: "/reference/modules/" },
+                            { text: "applications", link: "/reference/modules/applications.md" },
+                            { text: "dependencies", link: "/reference/modules/dependencies.md" },
+                            { text: "helpers", link: "/reference/modules/helpers.md" },
+                            { text: "middleware", link: "/reference/modules/middleware.md" },
+                            { text: "parameters", link: "/reference/modules/parameters.md" },
+                            { text: "renderers", link: "/reference/modules/renderers.md" },
+                            { text: "responses", link: "/reference/modules/responses.md" },
+                            { text: "routing", link: "/reference/modules/routing.md" },
+                            { text: "types", link: "/reference/modules/types.md" },
+                        ]
+                    }
+                ]
+            },
+            "/migrations/": {
+                items: [
+                    {
+                        text: "Migrations",
+                        items: [
+                            { text: "1.0 -> 1.1", link: "/migrations/1_0-1_1.md" }
+                        ]
+                    }
                 ]
             }
         }

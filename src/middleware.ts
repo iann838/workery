@@ -1,13 +1,10 @@
-import type { App } from "./applications"
 import type { MiddlewareHandler } from "./types"
 
 export class Middleware<E = unknown> {
-    of?: App<E>
     name?: string
     handle: MiddlewareHandler<E>
 
-    constructor(init: { of?: App<E>; name?: string; handle: MiddlewareHandler<E> }) {
-        this.of = init.of
+    constructor(init: { name?: string; handle: MiddlewareHandler<E> }) {
         this.name = init.name
         this.handle = init.handle
     }

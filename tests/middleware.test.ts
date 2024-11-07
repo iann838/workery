@@ -1,7 +1,7 @@
 import type { ExecutionContext } from "@cloudflare/workers-types"
-import { JSONResponse } from "./responses"
-import { CORSMiddleware, CompressMiddleware, Middleware } from "./middleware"
-import type { Next } from "./types"
+import { JSONResponse } from "../src/responses"
+import { CORSMiddleware, CompressMiddleware, Middleware } from "../src/middleware"
+import type { Next } from "../src/types"
 
 const cfargs = {
     env: undefined,

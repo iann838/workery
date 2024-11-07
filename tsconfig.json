@@ -33,7 +33,7 @@
     "exclude": [
         "node_modules",
         "dist",
-        "src/**/*.test.ts",
+        "tests/**/*.ts",
     ],
     "include": [
         "src",

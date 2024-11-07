@@ -1,4 +1,4 @@
-import { renderRedoc, renderSwagger } from "./renderers"
+import { renderRedoc, renderSwagger } from "../src/renderers"
 
 describe("function renderSwagger", () => {
     test("[invocation]: return value simple", () => {

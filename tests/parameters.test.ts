@@ -1,8 +1,8 @@
 import type { ExecutionContext } from "@cloudflare/workers-types"
 import { z } from "zod"
-import { Dependency } from "./dependencies"
-import { createResolveLater, jsonCoerce } from "./helpers"
-import { Body, Cookie, Depends, Header, Path, Query, parseArgs, Responds } from "./parameters"
+import { Dependency } from "../src/dependencies"
+import { createResolveLater, jsonCoerce } from "../src/helpers"
+import { Body, Cookie, Depends, Header, Path, Query, parseArgs, Responds } from "../src/parameters"
 
 const cfargs = {
     env: undefined,
