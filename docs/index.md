@@ -11,7 +11,7 @@ hero:
     actions:
         -   theme: brand
             text: Get Started
-            link: /guides/first_steps.md
+            link: /guides/first-steps.md
         -   theme: alt
             text: View Source
             link: https://github.com/iann838/workery

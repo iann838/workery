@@ -36,7 +36,7 @@ export function generateRouteSummary(method: HTTPMethod, path: string): string {
         ...path
             .split("/")
             .map((s) => s && s[0].toUpperCase() + s.slice(1))
-            .filter((s) => s),
+            .filter((s) => s && !(s.startsWith("{") && s.endsWith("}"))),
     ].join(" ")
 }
 

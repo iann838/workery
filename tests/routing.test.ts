@@ -20,6 +20,7 @@ describe("function generateRouteSummary", () => {
         expect(generateRouteSummary("GET", "path/to/route")).toBe("Read Path To Route")
         expect(generateRouteSummary("POST", "/path/to/route/")).toBe("Create Path To Route")
         expect(generateRouteSummary("PUT", "path/to/route/")).toBe("Update Path To Route")
+        expect(generateRouteSummary("PUT", "path/to/route/{id}")).toBe("Update Path To Route")
         expect(generateRouteSummary("PATCH", "//route/")).toBe("Modify Route")
         expect(generateRouteSummary("DELETE", "")).toBe("Delete")
     })
