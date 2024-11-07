@@ -39,5 +39,5 @@ All `Router` init options plus:
 | `openapiUrl?` | ``null`` \| `string` | Route path URL for serving the OpenAPI JSON document. | `"/openapi.json"` |
 | `swaggerUrl?` | ``null`` \| `string` | Route path URL for serving the Swagger interactive documentation. | `"/docs"` |
 | `redocUrl?` | ``null`` \| `string` | Route path URL for serving the ReDoc alternative documentation. | `"/redoc"` |
-| `middleware?` | [`Middleware`](middleware.Middleware.md)\<`E`\>[] | List of middleware applied to the application | `[]` |
+| `middleware?` | [`Middleware`](/reference/classes/middleware.Middleware.md)\<`E`\>[] | List of middleware applied to the application | `[]` |
 | `exceptionHandler?` | [`ExceptionHandler`](/reference/modules/types.md#exceptionhandler)\<`E`\> | Exception handler when an exception or error has occured during requests. | `baseExceptionHandler` |
