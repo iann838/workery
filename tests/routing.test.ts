@@ -21,8 +21,13 @@ describe("function generateRouteSummary", () => {
         expect(generateRouteSummary("POST", "/path/to/route/")).toBe("Create Path To Route")
         expect(generateRouteSummary("PUT", "path/to/route/")).toBe("Update Path To Route")
         expect(generateRouteSummary("PUT", "path/to/route/{id}")).toBe("Update Path To Route")
+        expect(generateRouteSummary("GET", "/items/{itemId}/subitems")).toBe("Read Items Subitems")
+        expect(generateRouteSummary("GET", ";droigh/675/等级")).toBeTruthy()
         expect(generateRouteSummary("PATCH", "//route/")).toBe("Modify Route")
         expect(generateRouteSummary("DELETE", "")).toBe("Delete")
+        expect(generateRouteSummary("TRACE", "")).toBe("Trace")
+        expect(generateRouteSummary("OPTIONS", "")).toBe("Check")
+        expect(generateRouteSummary("HEAD", "/items")).toBe("Head Items")
     })
 })
 

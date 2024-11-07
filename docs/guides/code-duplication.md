@@ -1,6 +1,6 @@
 # Code Duplication
 
-If you notice that your code is starting to repeat statements and declaration more than a few times, it is probably time to address them.
+If you notice that your code is starting to have repeated statements and declarations more than a few times, it is probably time to address them.
 
 This guide will use **repeated parameters** as the context of examples, because it's the most common place to have code duplication. However, these deduplication logics can be applied to other scenarios.
 
