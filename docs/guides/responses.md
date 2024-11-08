@@ -107,7 +107,7 @@ To declare response schemas for the generated OpenAPI document, specify an OAS3.
 
 There is a shortcut function provided by the `workery/parameters` module to make declaring response schemas easier:
 
-```ts{}
+```ts{5}
 import { Responds } from "workery/parameters"
 
 app.get("/", {
