@@ -13,17 +13,13 @@ Workery is a Modern, OpenAPI based, fast to code, fully typed, ready for product
 -   🪝 **Dependencies over complicated middleware.** Prepare variables, enforce authentication, and run other tasks before processing a request.
 -   🔩 **Highly flexible and adaptable.** Designed for effortless addition, removal, and replacement of modules or components.
 
-## Create App
-
-Create a new Workery app using NPM, Yarn, or PNPM.
+## Setup
 
 ```sh
 npm create cloudflare@latest -- --template iann838/workery/templates/hello-world
 ```
 
-## Example App
-
-Check out an example of a Workery app after following the [quick start guide](https://workery.iann838.com/guides/first-steps).
+## Example
 
 ```ts
 import { App } from "workery"

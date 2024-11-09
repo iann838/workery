@@ -1,5 +1,5 @@
 {
-  "name": "<TBD>",
+	"name": "<TBD>",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
@@ -15,7 +15,7 @@
 		"vitest": "2.0.5",
 		"wrangler": "^3.60.3"
 	},
-  "dependencies": {
-    "workery": "^1.1.2"
-  }
+	"dependencies": {
+		"workery": "^1.1.2"
+	}
 }
