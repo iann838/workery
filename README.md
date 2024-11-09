@@ -13,13 +13,17 @@ Workery is a Modern, OpenAPI based, fast to code, fully typed, ready for product
 -   🪝 **Dependencies over complicated middleware.** Prepare variables, enforce authentication, and run other tasks before processing a request.
 -   🔩 **Highly flexible and adaptable.** Designed for effortless addition, removal, and replacement of modules or components.
 
-## Installation
+## Create App
 
-```
-yarn add workery
+Create a new Workery app using NPM, Yarn, or PNPM.
+
+```sh
+npm create cloudflare@latest -- --template iann838/workery/templates/hello-world
 ```
 
-## Quick Start
+## Example App
+
+Check out an example of a Workery app after following the [quick start guide](https://workery.iann838.com/guides/first-steps).
 
 ```ts
 import { App } from "workery"
@@ -28,19 +32,21 @@ import z from "zod"
 
 const app = new App<Env>({})
 
-app.get("/entry/{id}", {
+app.get("/items/{itemId}", {
     parameters: {
-        id: Path(z.string().min(2).max(10)),
-        page: Query(z.number().int().min(0).max(20)),
+        itemId: Path(z.number().int().min(0)),
+        q: Query(z.string().optional()),
     },
-    handle({ id, page }) {
-        return { id, page }
+    handle: ({ itemId, q }) => {
+        return { itemId, q }
     },
 })
 
 export default app
 ```
 
-## Star me!
+![Swagger Docs](https://workery.iann838.com/swaggerdocs.jpg)
 
-Star this repo if you find it helpful!
+---
+
+Join other developers in **starring ⭐** this repository to show your support!

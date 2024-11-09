@@ -1,0 +1,23 @@
+# Contributing Guidelines
+
+## Welcome
+Thank you for considering contributing to Workery! We appreciate your time and effort. Please follow these guidelines to make the process smooth and effective.
+
+Workery is an open source project and we love to receive contributions from our community — you! There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests or writing code which can be incorporated into Workery.
+
+## Reporting Issues
+- Use the [issue tracker](#) to report bugs or suggest features.
+- Provide as much detail as possible, including steps to reproduce the issue and any relevant logs or screenshots.
+
+## Pull Requests
+- Provide details of all changes and reasons if applicable.
+- Code must be typed and avoid implicit `any`s where possible.
+- Code must be tested and have reasonable test coverage.
+- Code must match prettier formatted (handled by husky).
+- Commit messages must follow commitlint pattern (handled by husky).
+
+## Review Process
+- All contributions will be reviewed by project maintainers.
+- Maintain open communication during the review process to address any feedback or requests for changes.
+
+We look forward to your contributions!

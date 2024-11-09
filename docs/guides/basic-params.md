@@ -4,6 +4,7 @@ You can declare "parameters" or "variables" under the `parameters` key on route 
 
 ```ts {5,7}
 import { Path } from "workery/parameters"
+import z from "zod"
 
 app.get("/items/{itemId}", {
     parameters: {

@@ -3,75 +3,62 @@
     <b>Workery</b>
 </div>
 
-## Installation
+## Create App
 
-Install `workery` using Yarn, NPM, or PNPM.
+Create a new Workery app using NPM, Yarn, or PNPM.
 
 ::: code-group
-```sh [yarn]
-yarn add workery
-```
 ```sh [npm]
-npm install workery
+npm create cloudflare@latest -- --template iann838/workery/templates/hello-world
+```
+```sh [yarn]
+yarn create cloudflare@latest --template iann838/workery/templates/hello-world
+```
+```sh [yarn-v1]
+yarn create cloudflare --template iann838/workery/templates/hello-world
 ```
 ```sh [pnpm]
-pnpm add workery
+pnpm create cloudflare@latest --template iann838/workery/templates/hello-world
 ```
 :::
 
-::: info About imports
-You may need `"moduleResolution": "Bundler"` enabled on your `tsconfig.json` for imports to work properly.
-:::
+Now, you app is set up, `cd` into the new folder.
 
-## Create app
+## Run Server
 
-The simplest Workery `index.ts` could look like this:
-
-```ts
-import { App } from "workery"
-
-const app = new App<Env>({})
-
-app.get("/", {
-    parameters: {},
-    handle: () => {
-        return { message: "Hello World" }
-    },
-})
-```
-
-## Run locally
-
-Run your app locally:
+Run local development server:
 
 ::: code-group
-```sh [yarn]
-yarn dev
-```
 ```sh [npm]
 npm run dev
 ```
+```sh [yarn]
+yarn dev
+```
 ```sh [pnpm]
-pnpm run dev
+pnpm dev
 ```
 :::
 
 
-## Check output
+## Check Output
 
 Open your browser at http://127.0.0.1:8787.
 
 You will see the JSON response as:
 
 ```json
-{ "message": "Hello World" }
+{"message":"Hello World"}
 ```
 
-## Add routes
+## Add Routes
 
 Let's add a new route:
 
 ```ts
+import { Path, Query } from "workery/parameters"
+import z from "zod"
+
 app.get("/items/{itemId}", {
     parameters: {
         itemId: Path(z.number().int().min(0)),
@@ -83,7 +70,7 @@ app.get("/items/{itemId}", {
 })
 ```
 
-## Interactive API docs
+## Interactive Docs
 
 Now go to http://127.0.0.1:8787/docs.
 
@@ -91,15 +78,32 @@ You will see the interactive API documentation (provided by [Swagger UI](https:/
 
 ![Swagger UI Docs](/swaggerdocs.jpg)
 
-## Alternative API docs
+## Alternative Docs
 
 And now, go to http://127.0.0.1:8787/redoc.
 
-You will see the alternative documentation (provided by [ReDoc](https://github.com/Rebilly/ReDoc)):
+You will see the static API documentation (provided by [ReDoc](https://github.com/Rebilly/ReDoc)):
 
 ![ReDoc Docs](/redocdocs.jpg)
 
-## OpenAPI Specification
+## Deploy App
+
+Deploy your app to Cloudflare Workers:
+
+::: code-group
+```sh [npm]
+npm run deploy
+```
+```sh [yarn]
+yarn deploy
+```
+```sh [pnpm]
+pnpm deploy
+```
+:::
+
+
+## OpenAPI Spec
 
 Workery generates a "schema" with all your API using the **OpenAPI** standard for defining APIs.
 
