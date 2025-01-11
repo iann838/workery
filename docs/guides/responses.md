@@ -57,6 +57,19 @@ app.get("/", {
 })
 ```
 
+The default status code used for implicit responses can also be modified:
+
+```ts{2}
+app.get("/", {
+    statusCode: 204,
+	responseClass: PlainTextResponse,
+    parameters: {},
+    handle: () => {
+        return ""
+    },
+})
+```
+
 ## Status and Headers
 
 You can provide status code, and headers on the second optional argument when instantiating responses.

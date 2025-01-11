@@ -114,8 +114,12 @@
         "@commitlint/config-conventional": "^13.1.0",
         "@rollup/plugin-terser": "^0.2.1",
         "@rollup/plugin-typescript": "^10.0.1",
+        "@types/cookie": "^0.6.0",
         "@types/jest": "^29.0.0",
         "@types/node": "^20.3.1",
+        "drizzle-kit": "^0.25.0",
+        "drizzle-orm": "^0.34.1",
+        "drizzle-zod": "^0.5.1",
         "husky": "^7.0.2",
         "jest": "^29.0.0",
         "jest-openapi": "^0.14.2",
@@ -131,7 +135,6 @@
     },
     "dependencies": {
         "@asteasolutions/zod-to-openapi": "^5.3.1",
-        "@types/cookie": "^0.6.0",
         "cookie": "^0.6.0",
         "zod": "^3.21.4"
     }
