@@ -44,8 +44,8 @@ enabled = true
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#d1-databases
 [[d1_databases]]
 binding = "DB"
-database_name = "<TBD_D1>"
-database_id = "<TBD_D1>"
+database_name = "<TBD_D1NAME>"
+database_id = "<TBD_D1ID>"
 
 # Bind a dispatch namespace. Use Workers for Platforms to deploy serverless functions programmatically on behalf of your customers.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#dispatch-namespace-bindings-workers-for-platforms

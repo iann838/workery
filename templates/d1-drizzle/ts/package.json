@@ -9,7 +9,7 @@
 		"test": "vitest",
 		"cf-typegen": "wrangler types",
 		"migrations:generate": "drizzle-kit generate",
-		"migrations:apply": "wrangler d1 migrations apply <TBD_D1>"
+		"migrations:apply": "wrangler d1 migrations apply <TBD_D1NAME>"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.5.2",
