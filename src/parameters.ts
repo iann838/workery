@@ -217,8 +217,8 @@ export async function parseArgs<Ps extends RouteParameters, E = unknown>(
                     return {
                         success: false as const,
                         error: new z.ZodError([
-                            { message: "Invalid JSON.", path: [], code: z.ZodIssueCode.custom }
-                        ])
+                            { message: "Invalid JSON.", path: [], code: z.ZodIssueCode.custom },
+                        ]),
                     }
                 }
                 return parameter.schema.safeParse(input)
