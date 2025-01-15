@@ -361,7 +361,6 @@ describe("class App", () => {
 
     test("[method] openapi: return value simple", () => {
         const openapi = app.openapi()
-        console.log(JSON.stringify(openapi))
         expect(openapi).toBeTruthy()
         expect(Object.entries(openapi.paths!).length).toBeTruthy()
     })

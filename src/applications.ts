@@ -139,7 +139,6 @@ export class App<E = unknown> extends Router<E> {
         const { req } = baseArgs
         try {
             const url = new URL(req.url)
-            console.log(url.pathname, url.pathname.replace(this._rootPathRegex, ""))
             const [route, params] = this.routeMatcher.match(
                 req.method,
                 url.pathname.replace(this._rootPathRegex, "")

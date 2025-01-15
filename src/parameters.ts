@@ -210,7 +210,17 @@ export async function parseArgs<Ps extends RouteParameters, E = unknown>(
                 else input = req.body // typeof ReadableStream
                 return { success: true as const, data: input }
             } else {
-                let input = await req.json()
+                let input
+                try {
+                    input = await req.json()
+                } catch (e) {
+                    return {
+                        success: false as const,
+                        error: new z.ZodError([
+                            { message: "Invalid JSON.", path: [], code: z.ZodIssueCode.custom }
+                        ])
+                    }
+                }
                 return parameter.schema.safeParse(input)
             }
         },

@@ -402,6 +402,26 @@ describe("function parseArgs", () => {
         expect(flag).toBe(true)
     })
 
+    test("[invocation]: return value fail invalid body json", async () => {
+        const parseInfo1 = await parseArgs(
+            {
+                pBody: Body(z.object({ key: z.string(), value: z.number() })),
+            },
+            {
+                baseArgs: {
+                    req: new Request("http://a.co/notimportant", {
+                        method: "POST",
+                        body: `{ key: "mykey", value: 12, }`,
+                    }),
+                    ...cfargs,
+                },
+                later: nullLater,
+            }
+        )
+        expect(parseInfo1.errors.length).toBe(1)
+        expect(parseInfo1.success).toBe(false)
+    })
+
     test("[invocation]: return value fail flat", async () => {
         const parseInfo1 = await parseArgs(
             {

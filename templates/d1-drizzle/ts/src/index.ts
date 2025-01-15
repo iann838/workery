@@ -11,7 +11,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
 */
 import { App, Dependency } from "workery"
-import { Body, Depends, Path } from "workery/parameters"
+import { Body, Depends, Path, Query } from "workery/parameters"
 import { JSONResponse } from "workery/responses"
 
 import { eq } from "drizzle-orm"
@@ -35,6 +35,21 @@ app.get("/", {
     },
 })
 
+app.get("/items", {
+    parameters: {
+        db: Depends(useDb),
+        offset: Query(z.number().default(0)),
+        limit: Query(z.number().default(20)),
+    },
+    handle: async ({ db, offset, limit }) => {
+        return await db
+            .select()
+            .from(items)
+            .limit(limit)
+            .offset(offset)
+    },
+})
+
 app.post("/items", {
     statusCode: 201,
     parameters: {
@@ -42,30 +57,15 @@ app.post("/items", {
         item: Body(zItem.omit({ id: true, updatedAt: true })),
     },
     handle: async ({ db, item }) => {
-        const results = await db
-            .insert(items)
-            .values(item)
-            .onConflictDoNothing()
-            .returning()
-        if (!results.length)
+        try {
+            const results = await db
+                .insert(items)
+                .values(item)
+                .returning()
+            return results[0]
+        } catch (e: unknown) {
             return new JSONResponse({ detail: "Item data conflict" }, { status: 409 })
-        return results[0]
-    },
-})
-
-app.post("/items/{id}", {
-    parameters: {
-        db: Depends(useDb),
-        id: Path(z.number()),
-    },
-    handle: async ({ db, id }) => {
-        const results = await db
-            .select()
-            .from(items)
-            .where(eq(items.id, id))
-        if (!results.length)
-            return new JSONResponse({ detail: "Item not found" }, { status: 404 })
-        return results[0]
+        }
     },
 })
 
