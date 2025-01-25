@@ -20,7 +20,11 @@ pnpm create workery
 :::
 
 ::: info About Templates
-Some templates requires extra setup after creation, each template has a set of script commands added to `package.json`. Detailed docs for each template is located at [Templates](/templates/).
+Some templates requires extra setup after creation, each template has a set of script commands, detailed docs for each template is located at [Templates](/templates/). Available templates:
+```md
+* hello-world
+* d1-drizzle
+```
 :::
 
 Now, you app is set up, `cd` into the new folder.

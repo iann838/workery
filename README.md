@@ -19,7 +19,11 @@ Workery is a Modern, OpenAPI based, fast to code, fully typed, ready for product
 npm create workery
 ```
 
-Select a base template, and start developing, some templates may require extra setup prompted at the end.
+Select a base template, and start developing, some templates may require extra setup. Available templates:
+```md
+* hello-world
+* d1-drizzle
+```
 
 ## Example
 
