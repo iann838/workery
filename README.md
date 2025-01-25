@@ -20,9 +20,10 @@ npm create workery
 ```
 
 Select a base template, and start developing, some templates may require extra setup. Available templates:
+
 ```md
-* hello-world
-* d1-drizzle
+-   hello-world
+-   d1-drizzle
 ```
 
 ## Example
