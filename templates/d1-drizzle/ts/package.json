@@ -19,7 +19,7 @@
 		"wrangler": "^3.60.3"
 	},
 	"dependencies": {
-		"workery": "^1.1.2",
+		"workery": "^1.1.3",
 		"drizzle-orm": "^0.34.1",
 		"drizzle-zod": "^0.5.1"
 	}

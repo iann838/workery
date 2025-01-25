@@ -11,6 +11,7 @@ import type {
     UnboundRoute,
 } from "./types"
 import { Responds } from "./parameters"
+import { Middleware } from "./middleware"
 
 export function fixPathSlashes(path: string) {
     if (path.length == 0 || path == "/") return "/"
@@ -52,6 +53,7 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
     statusCode: number
     includeInSchema: boolean
     responseClass: ResponseClass
+    middleware: Middleware<E>[]
     parameters: Ps
     handle: RouteHandler<R, Ps, E>
 
@@ -67,6 +69,7 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
         includeInSchema?: boolean
         statusCode?: number
         responseClass?: ResponseClass
+        middleware?: Middleware<E>[]
         parameters: Ps
         handle: RouteHandler<R, Ps, E>
     }) {
@@ -81,6 +84,7 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
         this.includeInSchema = init.includeInSchema ?? true
         this.statusCode = init.statusCode ?? 200
         this.responseClass = init.responseClass ?? JSONResponse
+        this.middleware = init.middleware ?? []
         this.parameters = init.parameters
         this.handle = init.handle
     }
@@ -267,6 +271,7 @@ export class Router<E = unknown> {
     includeInSchema: boolean
     responses: Record<number, ResponseConfig>
     defaultResponseClass: ResponseClass
+    middleware: Middleware<E>[]
     routeMatcher: RouteMatcher<E>
 
     constructor(init: {
@@ -275,11 +280,13 @@ export class Router<E = unknown> {
         includeInSchema?: boolean
         responses?: Record<number, ResponseConfig>
         defaultResponseClass?: ResponseClass
+        middleware?: Middleware<E>[]
     }) {
         this.tags = init.tags ?? []
         this.deprecated = init.deprecated ?? false
         this.includeInSchema = init.includeInSchema ?? true
         this.defaultResponseClass = init.defaultResponseClass ?? JSONResponse
+        this.middleware = init.middleware ?? []
         this.responses = init.responses ?? {
             422: Responds(
                 z.object({
@@ -363,6 +370,7 @@ export class Router<E = unknown> {
                 ...this.responses,
                 ...unboundRoute.responses,
             },
+            middleware: [...this.middleware, ...(unboundRoute.middleware ?? [])],
         })
         this.routeMatcher.push(route)
         return route

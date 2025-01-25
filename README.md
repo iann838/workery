@@ -16,8 +16,10 @@ Workery is a Modern, OpenAPI based, fast to code, fully typed, ready for product
 ## Setup
 
 ```sh
-npm create cloudflare@latest -- --template iann838/workery/templates/hello-world
+npm create workery
 ```
+
+Select a base template, and start developing, some templates may require extra setup prompted at the end.
 
 ## Example
 

@@ -13,12 +13,17 @@ export default {
                 activeMatch: "/guides/*"
             },
             {
+                text: "Templates",
+                link: "/templates/index.md",
+                activeMatch: "/templates/*"
+            },
+            {
                 text: "Reference",
                 link: "/reference/modules/",
                 activeMatch: "/reference/*"
             },
             {
-                text: "1.1.2 (latest)",
+                text: "1.1.3 (latest)",
                 items: [
                     { text: "Releases", link: "https://github.com/iann838/workery/releases" },
                     { text: "Migrations", link: "/migrations/1_0-1_1.md" }
@@ -101,6 +106,18 @@ export default {
                         ]
                     },
                 ],
+            },
+            "/templates/": {
+                items: [
+                    {
+                        text: "Templates",
+                        collapsed: false,
+                        items: [
+                            { text: "hello-world", link: "/templates/hello-world.md" },
+                            { text: "d1-drizzle", link: "/templates/d1-drizzle.md" },
+                        ]
+                    }
+                ]
             },
             "/reference/": {
                 items: [

@@ -9,17 +9,18 @@ Create a new Workery app using NPM, Yarn, or PNPM.
 
 ::: code-group
 ```sh [npm]
-npm create cloudflare@latest -- --template iann838/workery/templates/hello-world
+npm create workery
 ```
 ```sh [yarn]
-yarn create cloudflare@latest --template iann838/workery/templates/hello-world
-```
-```sh [yarn-v1]
-yarn create cloudflare --template iann838/workery/templates/hello-world
+yarn create workery
 ```
 ```sh [pnpm]
-pnpm create cloudflare@latest --template iann838/workery/templates/hello-world
+pnpm create workery
 ```
+:::
+
+::: info About Templates
+Some templates requires extra setup after creation, each template has a set of script commands added to `package.json`. Detailed docs for each template is located at [Templates](/templates/).
 :::
 
 Now, you app is set up, `cd` into the new folder.

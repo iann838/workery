@@ -3,7 +3,7 @@ import {
     OpenApiGeneratorV31,
     ResponseConfig,
 } from "@asteasolutions/zod-to-openapi"
-import cookie from "cookie"
+import * as cookie from "cookie"
 import type {
     ContactObject,
     LicenseObject,
@@ -107,7 +107,11 @@ export class App<E = unknown> extends Router<E> {
 
     include(pathPrefix: string, router: Router<E>) {
         for (const route of router.routeMatcher) {
-            const includeRoute = new Route({ ...route, path: pathPrefix + route.path })
+            const includeRoute = new Route({
+                ...route,
+                path: pathPrefix + route.path,
+                middleware: [...this.middleware, ...route.middleware],
+            })
             this.routeMatcher.push(includeRoute)
         }
     }
@@ -180,9 +184,9 @@ export class App<E = unknown> extends Router<E> {
                     throw e
                 }
             }
-            nextMap[this.middleware.length - 1] = next
-            for (let i = this.middleware.length - 1; i >= 0; i--) {
-                const middleware = this.middleware[i]
+            nextMap[route.middleware.length - 1] = next
+            for (let i = route.middleware.length - 1; i >= 0; i--) {
+                const middleware = route.middleware[i]
                 next = async () => await middleware.handle(baseArgs, nextMap[i])
                 nextMap[i - 1] = next
             }

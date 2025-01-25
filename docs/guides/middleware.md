@@ -70,6 +70,38 @@ const myMiddleware = new Middleware<Env>({
 In Cloudflare Workers, `Request` (unpack arg `req`) objects are immutable, modifying this object results in error. Also, [performance and timers](https://developers.cloudflare.com/workers/runtime-apis/performance/) only advance or increment after I/O occurs.
 :::
 
+## Lower middleware
+
+You may choose to have middleware to only a subset of your routes. You can do so by [grouping them in a router](./bigger-apps) and defining middleware on that level, or directly on route handlers.
+
+```ts{2}
+const router = new Router<Env>({
+    middleware: [...]
+})
+
+router.get(...)
+
+// later included to main app
+app.include("/subroute", router)
+```
+
+or
+
+```ts{2}
+app.get("/", {
+    middleware: [...],
+    parameters: {},
+    handle: () => { ... },
+})
+```
+
+Middleware defined on routers (sub apps) and route handlers, are **merged** when included to higher level objects (main app, and other sub apps) respecting the following middleware execution order:
+
+```ts
+// middleware execution order
+defined on main app -> defined on routers -> defined on route handlers
+```
+
 ## Built-in Middleware
 
 **Workery** provides built-in middleware for common use-cases (even though they are not necessarily common in the context of Cloudflare Workers):

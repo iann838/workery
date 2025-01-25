@@ -4,10 +4,11 @@ import type { ExecutionContext } from "@cloudflare/workers-types"
 import { App, Router } from "../src"
 import { Dependency } from "../src/dependencies"
 import { createObjectPartial } from "../src/helpers"
-import { CORSMiddleware, CompressMiddleware } from "../src/middleware"
+import { CORSMiddleware, CompressMiddleware, Middleware } from "../src/middleware"
 import { Body, Cookie, Depends, Header, Path, Query, Responds } from "../src/parameters"
 import { JSONResponse, PlainTextResponse } from "../src/responses"
 
+// 2 Sample Apps
 const app = new App<undefined>({
     middleware: [
         CompressMiddleware("gzip"),
@@ -25,6 +26,9 @@ const cfargs = {
     env: undefined,
     ctx: undefined as unknown as ExecutionContext,
 }
+
+// Sample dependency
+
 const requireAuthSession = new Dependency({
     of: app,
     name: "requireAuthSession",
@@ -37,6 +41,9 @@ const requireAuthSession = new Dependency({
         return { id: 123, token: authorization }
     },
 })
+
+// Sample Nested Dependency
+
 const testNestedDependencyNested = new Dependency({
     parameters: {
         one: Query(z.string()),
@@ -55,6 +62,8 @@ const testNestedDependency = new Dependency({
         return { three, zero }
     }
 })
+
+// Sample route definitions
 
 app.get("/hello-world", {
     responseClass: PlainTextResponse,
@@ -166,6 +175,8 @@ app.options("/hello-world", {
     handle: () => "Hello World!",
 })
 
+// Sample sub app
+
 const subapp = new Router<undefined>({})
 subapp.get("/hello-world", {
     responseClass: PlainTextResponse,
@@ -178,6 +189,8 @@ subapp.get("/hello-world", {
 app.include("/subpath", subapp)
 appAlt.include("/subpath", subapp)
 
+// Sample code dedupe
+
 const appAltPartial = createObjectPartial({
     altHeader: Header(z.string())
 })
@@ -189,6 +202,73 @@ appAlt.get("/hello-world-2", {
     }),
     handle: ({ altHeader, testOpenAPI }) => "Hello World!",
 })
+
+// Sample middleware
+
+const m1 = new Middleware({
+    name: "m1",
+    handle: async ({}, next) => {
+        const res = await next()
+        res.headers.set("X-M", (res.headers.get("X-M") || "") + "1")
+        return res
+    },
+})
+
+const m2 = new Middleware({
+    name: "m2",
+    handle: async ({}, next) => {
+        const res = await next()
+        res.headers.set("X-M", (res.headers.get("X-M") || "") + "2")
+        return res
+    },
+})
+
+const m3 = new Middleware({
+    name: "m3",
+    handle: async ({}, next) => {
+        const res = await next()
+        res.headers.set("X-M", (res.headers.get("X-M") || "") + "3")
+        return res
+    },
+})
+
+// Sample app using middleware merge
+
+const appMMerge = new App<undefined>({
+    middleware: [m1],
+})
+const subAppMMerge = new Router<undefined>({
+    middleware: [m2],
+})
+const subAppMMerge2 = new Router<undefined>({
+    middleware: [m2, m3],
+})
+appMMerge.get("/1", {
+    parameters: {},
+    handle: () => null,
+})
+appMMerge.get("/13", {
+    middleware: [m3],
+    parameters: {},
+    handle: () => null,
+})
+subAppMMerge.get("/", {
+    parameters: {},
+    handle: () => null,
+})
+subAppMMerge2.get("/", {
+    parameters: {},
+    handle: () => null,
+})
+subAppMMerge.get("/3", {
+    middleware: [m3],
+    parameters: {},
+    handle: () => null,
+})
+appMMerge.include("/2", subAppMMerge)
+appMMerge.include("/23", subAppMMerge2)
+
+// Tests
 
 describe("class App", () => {
     test("[method] handle: success", async () => {
@@ -505,6 +585,19 @@ describe("class App", () => {
         expect(res1).toBeTruthy()
         expect(res1.status).toBe(200)
         expect(await res1.text()).toBe("oreo")
+    })
+
+    test("[method] handle: middleware merge", async () => {
+        const res1 = await appMMerge.handle({ req: new Request("http://a.co/1"), ...cfargs })
+        expect(res1.headers.get("X-M")).toBe("1")
+        const res2 = await appMMerge.handle({ req: new Request("http://a.co/13"), ...cfargs })
+        expect(res2.headers.get("X-M")).toBe("31")
+        const res3 = await appMMerge.handle({ req: new Request("http://a.co/2"), ...cfargs })
+        expect(res3.headers.get("X-M")).toBe("21")
+        const res4 = await appMMerge.handle({ req: new Request("http://a.co/2/3"), ...cfargs })
+        expect(res4.headers.get("X-M")).toBe("321")
+        const res5 = await appMMerge.handle({ req: new Request("http://a.co/23"), ...cfargs })
+        expect(res5.headers.get("X-M")).toBe("321")
     })
 
 })

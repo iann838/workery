@@ -152,7 +152,7 @@ export async function parseArgs<Ps extends RouteParameters, E = unknown>(
         rawParameters?: {
             params?: Record<string, string>
             queries?: Record<string, string[]>
-            cookies?: Record<string, string>
+            cookies?: Record<string, string | undefined>
         }
         later: Later
     }

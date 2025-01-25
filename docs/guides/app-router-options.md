@@ -17,6 +17,7 @@ This class is used for structuring [big applications](./bigger-apps.md) into mul
 | `includeInSchema?` | `boolean` | Set to include or exclude all routes from the generated OpenAPI document. | `true` |
 | `responses?` | `Record`\<`number`, `ResponseConfig`\> | Additional [response schemas](./responses.md#openapi-schemas) to all routes, shown in the generated OpenAPI document. | `{ 422: ... }` |
 | `defaultResponseClass?` | [`ResponseClass`](/reference/modules/types.md#responseclass) | Default response class of all routes. | `JSONResponse` |
+| `middleware?` | [`Middleware`](/reference/classes/middleware.Middleware.md)\<`E`\>[] | List of middleware applied to this router, merged when included in higher level routers. | `[]` |
 
 ## App Options
 
@@ -39,5 +40,4 @@ All `Router` init options plus:
 | `openapiUrl?` | ``null`` \| `string` | Route path URL for serving the OpenAPI JSON document. | `"/openapi.json"` |
 | `swaggerUrl?` | ``null`` \| `string` | Route path URL for serving the Swagger interactive documentation. | `"/docs"` |
 | `redocUrl?` | ``null`` \| `string` | Route path URL for serving the ReDoc alternative documentation. | `"/redoc"` |
-| `middleware?` | [`Middleware`](/reference/classes/middleware.Middleware.md)\<`E`\>[] | List of middleware applied to the application | `[]` |
 | `exceptionHandler?` | [`ExceptionHandler`](/reference/modules/types.md#exceptionhandler)\<`E`\> | Exception handler when an exception or error has occured during requests. | `baseExceptionHandler` |
