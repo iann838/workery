@@ -46,6 +46,10 @@ app.get("/items/{itemId}", {
 At the moment, sending cookies in Swagger is [not possible](https://swagger.io/docs/specification/v3_0/authentication/cookie-authentication/). Making request to the example above in the interactive docs, `yummy` will always return `undefined`.
 :::
 
+:::warning Reserved headers in Swagger
+Sending reserved headers (e.g. `Authorization`, `Accept`) explicitly in Swagger will be ignored, as these headers are controlled by a different UI in Swagger (e.g. `Accept` is controlled by a dropdown menu in the response part of the UI), you must hide these headers by setting `includeInSchema: false` if they are defined as required for requests through Swagger to work.
+:::
+
 ## Parameters Behavior
 
 `Path` parameters requires declaration on route path using `{}` annotation.

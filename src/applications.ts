@@ -76,7 +76,7 @@ export class App<E = unknown> extends Router<E> {
         this.exceptionHandler = init.exceptionHandler ?? baseExceptionHandler
 
         if (this.openapiUrl) {
-            this.get(this.openapiUrl, {
+            const openapiRoute = this.get(this.openapiUrl, {
                 includeInSchema: false,
                 responseClass: JSONResponse,
                 parameters: {},
@@ -88,7 +88,7 @@ export class App<E = unknown> extends Router<E> {
                     responseClass: HTMLResponse,
                     parameters: {},
                     handle: () =>
-                        renderSwagger(this.openapiUrl!, {
+                        renderSwagger(openapiRoute.path, {
                             title: this.title,
                         }),
                 })
@@ -98,7 +98,7 @@ export class App<E = unknown> extends Router<E> {
                     responseClass: HTMLResponse,
                     parameters: {},
                     handle: () =>
-                        renderRedoc(this.openapiUrl!, {
+                        renderRedoc(openapiRoute.path, {
                             title: this.title,
                         }),
                 })
