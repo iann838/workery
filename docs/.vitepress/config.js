@@ -23,7 +23,7 @@ export default {
                 activeMatch: "/reference/*"
             },
             {
-                text: "1.1.4 (latest)",
+                text: "1.1.5 (latest)",
                 items: [
                     { text: "Releases", link: "https://github.com/iann838/workery/releases" },
                     { text: "Migrations", link: "/migrations/1_0-1_1.md" }

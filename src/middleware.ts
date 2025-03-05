@@ -60,27 +60,29 @@ export const CORSMiddleware = (options?: {
             }
 
             if (opts.exposeHeaders?.length) {
-                resHeaders.set("Access-Control-Expose-Headers", opts.exposeHeaders.join(","))
+                resHeaders.set("Access-Control-Expose-Headers", opts.exposeHeaders.join(", "))
             }
 
-            if (req.method === "OPTIONS") {
+            let isCorsPreflightRequest = false
+            if (req.method === "OPTIONS" && req.headers.has("Access-Control-Request-Method")) {
+                isCorsPreflightRequest = true
                 if (opts.maxAge != null) {
                     resHeaders.set("Access-Control-Max-Age", opts.maxAge.toString())
                 }
+            }
 
+            const response = await next()
+
+            if (isCorsPreflightRequest) {
+                const availableMethods = (
+                    response.headers.get("Allow")?.split(/\s*,\s*/) || []
+                ).filter((method) => opts.allowMethods?.includes(method))
                 if (opts.allowMethods?.length) {
-                    resHeaders.set("Access-Control-Allow-Methods", opts.allowMethods.join(","))
+                    resHeaders.set("Access-Control-Allow-Methods", availableMethods.join(", "))
                 }
 
-                let headers = opts.allowHeaders
-                if (!headers?.length) {
-                    const requestHeaders = req.headers.get("Access-Control-Request-Headers")
-                    if (requestHeaders) {
-                        headers = requestHeaders.split(/\s*,\s*/)
-                    }
-                }
-                if (headers?.length) {
-                    resHeaders.set("Access-Control-Allow-Headers", headers.join(","))
+                if (opts.allowHeaders?.length) {
+                    resHeaders.set("Access-Control-Allow-Headers", opts.allowHeaders.join(", "))
                     resHeaders.append("Vary", "Access-Control-Request-Headers")
                 }
 
@@ -92,7 +94,7 @@ export const CORSMiddleware = (options?: {
                     status: 204,
                 })
             }
-            const response = await next()
+
             for (const [key, value] of resHeaders.entries()) response.headers.set(key, value)
             return response
         },

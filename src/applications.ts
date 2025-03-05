@@ -14,7 +14,7 @@ import type {
 import { Middleware } from "./middleware"
 import { parseArgs } from "./parameters"
 import { HTMLResponse, JSONResponse } from "./responses"
-import { Route, Router, searchParamsToQueries } from "./routing"
+import { fixPathSlashes, Route, Router, searchParamsToQueries } from "./routing"
 import type { ArgsOf, ExceptionHandler, RouteParameters, ResponseClass } from "./types"
 import { renderSwagger, renderRedoc } from "./renderers"
 import { createResolveLater, baseExceptionHandler } from "./helpers"
@@ -73,10 +73,11 @@ export class App<E = unknown> extends Router<E> {
         this.swaggerUrl = init.swaggerUrl === null ? null : (init.swaggerUrl ?? "/docs")
         this.redocUrl = init.redocUrl === null ? null : (init.redocUrl ?? "/redoc")
         this.middleware = init.middleware ?? []
+        this.routeMatcher.set(null, { middleware: this.middleware })
         this.exceptionHandler = init.exceptionHandler ?? baseExceptionHandler
 
         if (this.openapiUrl) {
-            const openapiRoute = this.get(this.openapiUrl, {
+            this.get(this.openapiUrl, {
                 includeInSchema: false,
                 responseClass: JSONResponse,
                 parameters: {},
@@ -88,7 +89,7 @@ export class App<E = unknown> extends Router<E> {
                     responseClass: HTMLResponse,
                     parameters: {},
                     handle: () =>
-                        renderSwagger(openapiRoute.path, {
+                        renderSwagger(fixPathSlashes(this.rootPath + this.openapiUrl!), {
                             title: this.title,
                         }),
                 })
@@ -98,7 +99,7 @@ export class App<E = unknown> extends Router<E> {
                     responseClass: HTMLResponse,
                     parameters: {},
                     handle: () =>
-                        renderRedoc(openapiRoute.path, {
+                        renderRedoc(fixPathSlashes(this.rootPath + this.openapiUrl!), {
                             title: this.title,
                         }),
                 })
@@ -110,9 +111,9 @@ export class App<E = unknown> extends Router<E> {
             const includeRoute = new Route({
                 ...route,
                 path: pathPrefix + route.path,
-                middleware: [...this.middleware, ...route.middleware],
             })
             this.routeMatcher.push(includeRoute)
+            this.routeMatcher.set(pathPrefix, { middleware: router.middleware })
         }
     }
 
@@ -143,51 +144,58 @@ export class App<E = unknown> extends Router<E> {
         const { req } = baseArgs
         try {
             const url = new URL(req.url)
-            const [route, params] = this.routeMatcher.match(
+            const [route, params, middleware] = this.routeMatcher.match(
                 req.method,
                 url.pathname.replace(this._rootPathRegex, "")
             )
-            if (route === undefined)
-                return new JSONResponse({ detail: "Not Found" }, { status: 404 })
-            if (route === null)
-                return new JSONResponse({ detail: "Method Not Allowed" }, { status: 405 })
             const cookies = cookie.parse(req.headers.get("Cookie") ?? "")
             const queries = searchParamsToQueries(url.searchParams)
             const nextMap: Record<string, () => Promise<Response>> = {}
-            let next = async () => {
-                const [resolve, later] = createResolveLater()
-                try {
-                    const parseInfo = await parseArgs<RouteParameters, E>(route.parameters, {
-                        baseArgs: baseArgs,
-                        later: later,
-                        rawParameters: {
-                            params,
-                            queries,
-                            cookies,
-                        },
-                    })
-                    let res: Response
-                    if (parseInfo.success) {
-                        res = await route.handle({ ...baseArgs, ...parseInfo.args })
-                        if (!(res instanceof Response))
-                            res = new route.responseClass(res, { status: route.statusCode })
-                    } else {
-                        res = new JSONResponse({ detail: parseInfo.errors }, { status: 422 })
+
+            let next: () => Promise<Response>
+            if (route === undefined) {
+                next = async () => new JSONResponse({ detail: "Not Found" }, { status: 404 })
+            } else if (route === null) {
+                next = async () =>
+                    new JSONResponse(
+                        { detail: "Method Not Allowed" },
+                        { status: 405, headers: params }
+                    )
+            } else {
+                next = async () => {
+                    const [resolve, later] = createResolveLater()
+                    try {
+                        const parseInfo = await parseArgs<RouteParameters, E>(route.parameters, {
+                            baseArgs: baseArgs,
+                            later: later,
+                            rawParameters: {
+                                params,
+                                queries,
+                                cookies,
+                            },
+                        })
+                        let res: Response
+                        if (parseInfo.success) {
+                            res = await route.handle({ ...baseArgs, ...parseInfo.args })
+                            if (!(res instanceof Response))
+                                res = new route.responseClass(res, { status: route.statusCode })
+                        } else {
+                            res = new JSONResponse({ detail: parseInfo.errors }, { status: 422 })
+                        }
+                        resolve(res)
+                        return res
+                    } catch (e: any) {
+                        if (e instanceof Response) {
+                            resolve(e)
+                            return e
+                        }
+                        throw e
                     }
-                    resolve(res)
-                    return res
-                } catch (e: any) {
-                    if (e instanceof Response) {
-                        resolve(e)
-                        return e
-                    }
-                    throw e
                 }
             }
-            nextMap[route.middleware.length - 1] = next
-            for (let i = route.middleware.length - 1; i >= 0; i--) {
-                const middleware = route.middleware[i]
-                next = async () => await middleware.handle(baseArgs, nextMap[i])
+            nextMap[middleware.length - 1] = next
+            for (let i = middleware.length - 1; i >= 0; i--) {
+                next = async () => await middleware[i].handle(baseArgs, nextMap[i])
                 nextMap[i - 1] = next
             }
             return await next()

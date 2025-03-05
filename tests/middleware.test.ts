@@ -64,7 +64,7 @@ describe("function CORSMiddleware", () => {
             {
                 req: new Request("https://page.com/path", {
                     method: "OPTIONS",
-                    headers: { Origin: "https://page.com" },
+                    headers: { Origin: "https://page.com", "Access-Control-Request-Method": "GET" },
                 }),
                 ...cfargs,
             },
@@ -92,7 +92,7 @@ describe("function CORSMiddleware", () => {
         const response3 = await middleware.handle(
             {
                 req: new Request("https://google.com/path", {
-                    headers: { Origin: "https://google.com" },
+                    headers: { Origin: "https://google.com", "Access-Control-Request-Method": "GET" },
                 }),
                 ...cfargs,
             },
@@ -105,7 +105,7 @@ describe("function CORSMiddleware", () => {
             {
                 req: new Request("https://google.com/path", {
                     method: "OPTIONS",
-                    headers: { Origin: "https://google.com" },
+                    headers: { Origin: "https://google.com", "Access-Control-Request-Method": "GET" },
                 }),
                 ...cfargs,
             },

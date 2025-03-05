@@ -343,6 +343,46 @@ describe("class App", () => {
             },
         })
         expect(res1.headers.get("Access-Control-Allow-Origin")).not.toBe("http://b.co")
+
+        const res2 = await app.handle({
+            req: new Request("http://b.co/projects/123/todos?trackId=abc", {
+                method: "OPTIONS",
+                body: JSON.stringify({
+                    id: "iid",
+                    title: "ititle",
+                    description: "idesc",
+                }),
+                headers: {
+                    "X-Rate-Limit": "20:100",
+                    authorization: "Bearer myauthtoken",
+                    "Access-Control-Request-Method": "POST",
+                },
+            }),
+            ...cfargs,
+        })
+        expect(res2).toBeTruthy()
+        expect(res2.status).toBe(204)
+        expect(res2.headers.get("Access-Control-Allow-Methods")).toEqual("POST")
+        expect(res2.headers.get("Access-Control-Allow-Origin")).not.toBe("http://b.co")
+
+        const res3 = await app.handle({
+            req: new Request("http://b.co/projects/123/todos?trackId=abc", {
+                method: "OPTIONS",
+                body: JSON.stringify({
+                    id: "iid",
+                    title: "ititle",
+                    description: "idesc",
+                }),
+                headers: {
+                    "X-Rate-Limit": "20:100",
+                    authorization: "Bearer myauthtoken",
+                },
+            }),
+            ...cfargs,
+        })
+        expect(res3).toBeTruthy()
+        expect(res3.status).toBe(405)
+        expect(res3.headers.get("Access-Control-Allow-Origin")).not.toBe("http://b.co")
     })
 
     test("[method] handle: success gzip", async () => {
@@ -598,6 +638,17 @@ describe("class App", () => {
         expect(res4.headers.get("X-M")).toBe("321")
         const res5 = await appMMerge.handle({ req: new Request("http://a.co/23"), ...cfargs })
         expect(res5.headers.get("X-M")).toBe("321")
+    })
+
+    test("[method] handle: middleware undefined route", async () => {
+        const res1 = await appMMerge.handle({ req: new Request("http://a.co/0"), ...cfargs })
+        expect(res1).toBeTruthy()
+        expect(res1.headers.get("X-M")).toBe("1")
+        expect(res1.status).toBe(404)
+        const res2 = await appMMerge.handle({ req: new Request("http://a.co/2/5623"), ...cfargs })
+        expect(res2).toBeTruthy()
+        expect(res2.headers.get("X-M")).toBe("21")
+        expect(res2.status).toBe(404)
     })
 
 })

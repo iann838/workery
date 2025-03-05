@@ -169,6 +169,7 @@ export class RouteNode<E = unknown> {
     private inner: Record<string, RouteNode<E>>
     name: string
     routes: Record<string, Route<any, any, E>>
+    middleware: Middleware<E>[]
     paramNames: string[]
 
     constructor(name: string) {
@@ -176,6 +177,7 @@ export class RouteNode<E = unknown> {
         this.name = name
         this.routes = {}
         this.paramNames = []
+        this.middleware = []
     }
 
     touch(node: string): RouteNode<E> {
@@ -199,7 +201,7 @@ export function searchParamsToQueries(searchParams: URLSearchParams): Record<str
 
 export class RouteMatcher<E = unknown> {
     routes: Route<any, any, E>[]
-    private tree: RouteNode<E>
+    tree: RouteNode<E>
 
     constructor() {
         this.routes = []
@@ -216,23 +218,37 @@ export class RouteMatcher<E = unknown> {
         return this.routes.length
     }
 
-    push(...routes: Route<any, any, E>[]): number {
-        for (const route of routes) {
-            this.routes.push(route)
-            const nodes = route.path.split("/").slice(1)
-            let tree = this.tree
-            const paramNames = []
-            for (let [index, node] of nodes.entries()) {
-                if (node[0] == "{" && node[node.length - 1] == "}") {
-                    paramNames.push(node.slice(1, -1))
-                    node = "{}"
-                }
-                tree = tree.touch(node)
-                if (index == nodes.length - 1) {
-                    tree.routes[route.method] = route
-                    tree.paramNames = paramNames
-                }
+    get(path: string): RouteNode<E> {
+        const nodes = fixPathSlashes(path).split("/").slice(1)
+        let tree = this.tree
+        const paramNames = []
+        for (let [index, node] of nodes.entries()) {
+            if (node[0] == "{" && node[node.length - 1] == "}") {
+                paramNames.push(node.slice(1, -1))
+                node = "{}"
             }
+            tree = tree.touch(node)
+            if (index == nodes.length - 1) {
+                tree.paramNames = paramNames
+                return tree
+            }
+        }
+        return tree
+    }
+
+    set(path: string | null, values: { middleware?: Middleware<E>[] }): RouteNode<E> {
+        let node: RouteNode<E>
+        if (path === null) node = this.tree
+        else node = this.get(path)
+        if (values.middleware) node.middleware = values.middleware
+        return node
+    }
+
+    push(...routes: Route<any, any, E>[]): number {
+        this.routes.push(...routes)
+        for (const route of routes) {
+            const node = this.get(route.path)
+            node.routes[route.method] = route
         }
         return this.length
     }
@@ -240,28 +256,31 @@ export class RouteMatcher<E = unknown> {
     match(
         method: string,
         path: string
-    ): [Route<any, any, E> | undefined | null, Record<string, string>] {
+    ): [Route<any, any, E> | undefined | null, Record<string, string>, Middleware<E>[]] {
         const nodes = fixPathSlashes(path).split("/").slice(1)
         const paramValues: string[] = []
+        const middleware: Middleware<E>[] = [...this.tree.middleware]
         let tree = this.tree
         for (const [index, node] of nodes.entries()) {
             let nextMatcher = tree.match(node)
-            if (!nextMatcher) return [undefined, {}]
+            if (!nextMatcher) return [undefined, {}, middleware]
             tree = nextMatcher
+            middleware.push(...tree.middleware)
             if (tree.name == "{}") paramValues.push(node)
             if (index == nodes.length - 1) {
                 if (!tree.routes[method]) {
-                    if (Object.keys(tree.routes).length == 0) return [undefined, {}]
-                    return [null, {}]
+                    if (Object.keys(tree.routes).length == 0) return [undefined, {}, middleware]
+                    return [null, { allow: Object.keys(tree.routes).join(", ") }, middleware]
                 }
                 const params: Record<string, string> = {}
                 for (let i = 0; i < tree.paramNames.length; i++) {
                     params[tree.paramNames[i]] = paramValues[i]
                 }
-                return [tree.routes[method], params]
+                middleware.push(...tree.routes[method].middleware)
+                return [tree.routes[method], params, middleware]
             }
         }
-        return [undefined, {}]
+        return [undefined, {}, middleware]
     }
 }
 
@@ -370,7 +389,6 @@ export class Router<E = unknown> {
                 ...this.responses,
                 ...unboundRoute.responses,
             },
-            middleware: [...this.middleware, ...(unboundRoute.middleware ?? [])],
         })
         this.routeMatcher.push(route)
         return route
