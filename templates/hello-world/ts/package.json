@@ -16,6 +16,6 @@
 		"wrangler": "^3.60.3"
 	},
 	"dependencies": {
-		"workery": "^1.1.3"
+		"workery": "^1.1.5"
 	}
 }

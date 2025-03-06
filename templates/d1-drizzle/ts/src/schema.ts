@@ -9,7 +9,6 @@
 */
 
 import { sqliteTable as table } from "drizzle-orm/sqlite-core"
-import { createSelectSchema } from "drizzle-zod"
 import * as t from "drizzle-orm/sqlite-core"
 
 /**
@@ -27,13 +26,3 @@ export const items = table(
         updatedAt: t.integer().notNull().$onUpdate(Date.now),
     },
 )
-
-/**
- * Create a zod schema from the items table.
- * This zod schema can be used for data validation in routes and OAS documentations.
- * You can optionally refine the output zod object with more specications or new data fields.
- * - In this case, the field `name` must have a minimum length of 1.
-*/
-export const zItem = createSelectSchema(items, {
-    name: (schema) => schema.name.min(1),
-})

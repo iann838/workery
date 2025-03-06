@@ -10,23 +10,16 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
 */
-import { App, Dependency } from "workery"
+import { App } from "workery"
 import { Body, Depends, Path, Query } from "workery/parameters"
 import { JSONResponse } from "workery/responses"
 
-import { eq } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/d1"
 import z from "zod"
 
-import { items, zItem } from "./schema"
+import { useDb } from "./dependencies"
+import { Item } from "./zodtypes"
 
 const app = new App<Env>({})
-
-const useDb = new Dependency({
-    of: app,
-    parameters: {},
-    handle: ({ env }) => drizzle(env.DB, { casing: "snake_case" })
-})
 
 app.get("/", {
     parameters: {},
@@ -42,30 +35,20 @@ app.get("/items", {
         limit: Query(z.number().default(20)),
     },
     handle: async ({ db, offset, limit }) => {
-        return await db
-            .select()
-            .from(items)
-            .limit(limit)
-            .offset(offset)
+        return await db.readItems(offset, limit)
     },
 })
 
 app.post("/items", {
-    statusCode: 201,
     parameters: {
         db: Depends(useDb),
-        item: Body(zItem.omit({ id: true, updatedAt: true })),
+        item: Body(Item.omit({ id: true, updatedAt: true })),
     },
     handle: async ({ db, item }) => {
-        try {
-            const results = await db
-                .insert(items)
-                .values(item)
-                .returning()
-            return results[0]
-        } catch (e: unknown) {
+        const result = await db.createItem(item)
+        if (!result)
             return new JSONResponse({ detail: "Item data conflict" }, { status: 409 })
-        }
+        return result
     },
 })
 
@@ -73,17 +56,13 @@ app.patch("/items/{id}", {
     parameters: {
         db: Depends(useDb),
         id: Path(z.number()),
-        itemPt: Body(zItem.omit({ id: true, updatedAt: true }).partial())
+        itemPt: Body(Item.omit({ id: true, updatedAt: true }).partial())
     },
     handle: async ({ db, id, itemPt }) => {
-        const results = await db
-            .update(items)
-            .set(itemPt)
-            .where(eq(items.id, id))
-            .returning()
-        if (!results.length)
+        const result = await db.updateItem(id, itemPt)
+        if (!result)
             return new JSONResponse({ detail: "Item not found" }, { status: 404 })
-        return results[0]
+        return result
     },
 })
 
