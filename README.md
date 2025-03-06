@@ -24,6 +24,7 @@ Select a base template, and start developing, some templates may require extra s
 ```md
 -   hello-world
 -   d1-drizzle
+-   do-sql-drizzle
 ```
 
 ## Example

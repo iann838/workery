@@ -24,6 +24,7 @@ Some templates requires extra setup after creation, each template has a set of s
 ```md
 * hello-world
 * d1-drizzle
+* do-sql-drizzle
 ```
 :::
 
