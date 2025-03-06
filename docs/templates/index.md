@@ -4,6 +4,7 @@ Available app templates:
 
 - [hello-world](./hello-world)
 - [d1-drizzle](./d1-drizzle)
+- [do-sql-drizzle](./do-sql-drizzle)
 
 
 To create an application using templates:

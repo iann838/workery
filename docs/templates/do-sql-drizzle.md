@@ -1,5 +1,5 @@
 
-# d1-drizzle
+# do-sql-drizzle
 
 Sample Workers application using **Durable Objects SQL API** database with **Workery** and **Drizzle ORM**. This template contains a `schema.ts` file where SQL table schemas are defined and an `index.ts` file defining CRUD route handlers interacting with the Durable Object interface implemented on `databases.ts`. The `schema.ts` file is also used for tracking and generating database migration files.
 
