@@ -1,7 +1,7 @@
 
 # d1-drizzle
 
-Sample Workers application using SQL D1 database with Workery and Drizzle ORM. This template contains a `schema.ts` file where SQL table schemas are defined and an `index.ts` file defining CRUD route handlers interacting with D1. The `schema.ts` file is also used for tracking and generating database migration files.
+Sample Workers application using **SQL D1 database** with **Workery** and **Drizzle ORM**. This template contains a `schema.ts` file where SQL table schemas are defined and an `index.ts` file defining CRUD route handlers interacting with the D1 interface implemented on `databases.ts`. The `schema.ts` file is also used for tracking and generating database migration files.
 
 ### Extra setup required
 
@@ -11,7 +11,7 @@ After creating an application with this template, manual extra setup is required
 
 - Update the D1 database ID in `wrangler.toml` (under `[[d1_databases]]`).
 
-- (Optional) Generate the migration file with the default `schema.ts` and apply them using the commands below. 
+- (Optional) Generate the migration file with the definitions in `schema.ts` and apply them using the commands below. 
 
 ---
 

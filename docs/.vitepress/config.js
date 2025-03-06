@@ -115,6 +115,7 @@ export default {
                         items: [
                             { text: "hello-world", link: "/templates/hello-world.md" },
                             { text: "d1-drizzle", link: "/templates/d1-drizzle.md" },
+                            { text: "do-sql-drizzle", link: "/templates/do-sql-drizzle.md" },
                         ]
                     }
                 ]
