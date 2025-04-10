@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ResponseConfig, RouteConfig, ZodRequestBody } from "@asteasolutions/zod-to-openapi"
+import { SecurityRequirementObject } from "openapi3-ts/oas31"
 import { JSONResponse } from "./responses"
 import type {
     BodyParameter,
@@ -12,6 +13,39 @@ import type {
 } from "./types"
 import { Responds } from "./parameters"
 import { Middleware } from "./middleware"
+
+const DEFAULT_SCHEMA_EXCLUDED_HEADERS = new Set([
+    "accept-encoding",
+    "accept-language",
+    "accept",
+    "authorization",
+    "connection",
+    "content-length",
+    "content-type",
+    "cookie",
+    "host",
+    "if-modified-since",
+    "if-none-match",
+    "keep-alive",
+    "origin",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "referer",
+    "set-cookie",
+    "transfer-encoding",
+    "upgrade",
+    "user-agent",
+    "cf-connecting-ip",
+    "cf-ipcountry",
+    "cf-ray",
+    "cf-visitor",
+    "x-forwarded-for",
+    "x-real-ip",
+    "cf-pseudo-ipv4",
+    "cf-connecting-ipv6",
+    "cdn-loop",
+    "cf-worker",
+])
 
 export function fixPathSlashes(path: string) {
     if (path.length == 0 || path == "/") return "/"
@@ -50,6 +84,7 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
     description: string
     deprecated: boolean
     responses: Record<number, ResponseConfig>
+    security?: SecurityRequirementObject[]
     statusCode: number
     includeInSchema: boolean
     responseClass: ResponseClass
@@ -66,6 +101,7 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
         description?: string
         deprecated?: boolean
         responses?: Record<number, ResponseConfig>
+        security?: SecurityRequirementObject[]
         includeInSchema?: boolean
         statusCode?: number
         responseClass?: ResponseClass
@@ -81,6 +117,7 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
         this.description = init.description ?? ""
         this.deprecated = init.deprecated ?? false
         this.responses = init.responses ?? {}
+        this.security = init.security
         this.includeInSchema = init.includeInSchema ?? true
         this.statusCode = init.statusCode ?? 200
         this.responseClass = init.responseClass ?? JSONResponse
@@ -93,9 +130,11 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
         const flatParameters: RouteParameters = {}
         const flattenParameters = (parameters: RouteParameters) => {
             for (const [name, parameter] of Object.entries(parameters)) {
-                if (parameter.location == "$depends")
+                if (parameter.location == "$depends") {
                     flattenParameters(parameter.dependency!.parameters)
-                else flatParameters[name] = parameter
+                } else {
+                    flatParameters[name] = parameter
+                }
             }
         }
         flattenParameters(this.parameters)
@@ -108,16 +147,28 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
             cookie: {},
         }
         for (const [name, parameter] of Object.entries(flatParameters)) {
-            if (!parameter.options.includeInSchema) continue
-            else if (parameter.location == "body")
+            if (parameter.options.includeInSchema === undefined) {
+                if (
+                    parameter.location == "header" &&
+                    DEFAULT_SCHEMA_EXCLUDED_HEADERS.has(name.replace(/_/g, "-").toLowerCase())
+                ) {
+                    parameter.options.includeInSchema = false
+                } else {
+                    parameter.options.includeInSchema = true
+                }
+            }
+            if (!parameter.options.includeInSchema) {
+                continue
+            } else if (parameter.location == "body") {
                 bodyParameter = parameter as BodyParameter<z.ZodType>
-            else if (parameter.location == "header")
+            } else if (parameter.location == "header") {
                 paramSchemas[parameter.location][
                     parameter.options.altName ?? name.replace(/_/g, "-")
                 ] = parameter.schema!
-            else
+            } else {
                 paramSchemas[parameter.location][parameter.options.altName ?? name] =
                     parameter.schema!
+            }
         }
         let body: ZodRequestBody | undefined = undefined
         if (bodyParameter) {
@@ -152,6 +203,7 @@ export class Route<R, Ps extends RouteParameters, E = unknown> {
             tags: this.tags,
             summary: this.summary,
             description: this.description,
+            security: this.security,
             deprecated: this.deprecated,
             request: {
                 body: body,
@@ -289,6 +341,7 @@ export class Router<E = unknown> {
     deprecated: boolean
     includeInSchema: boolean
     responses: Record<number, ResponseConfig>
+    security?: SecurityRequirementObject[]
     defaultResponseClass: ResponseClass
     middleware: Middleware<E>[]
     routeMatcher: RouteMatcher<E>
@@ -298,6 +351,7 @@ export class Router<E = unknown> {
         deprecated?: boolean
         includeInSchema?: boolean
         responses?: Record<number, ResponseConfig>
+        security?: SecurityRequirementObject[]
         defaultResponseClass?: ResponseClass
         middleware?: Middleware<E>[]
     }) {
@@ -320,6 +374,7 @@ export class Router<E = unknown> {
                 { description: "Validation Error", mediaType: "application/json" }
             ),
         }
+        this.security = init.security
         this.routeMatcher = new RouteMatcher<E>()
     }
 
@@ -383,6 +438,7 @@ export class Router<E = unknown> {
             deprecated: this.deprecated,
             includeInSchema: this.includeInSchema,
             responseClass: this.defaultResponseClass,
+            security: this.security,
             ...unboundRoute,
             tags: [...this.tags, ...(unboundRoute.tags ?? [])],
             responses: {

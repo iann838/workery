@@ -1,4 +1,14 @@
-import { Route, RouteNode, RouteMatcher, fixPathSlashes, searchParamsToQueries, generateRouteSummary } from "../src/routing"
+import { z } from "zod"
+import { Body, Depends, Header, Path, Query } from "../src/parameters"
+import {
+    Route,
+    RouteNode,
+    RouteMatcher,
+    fixPathSlashes,
+    searchParamsToQueries,
+    generateRouteSummary
+} from "../src/routing"
+import { Dependency } from "../src/dependencies"
 
 const nullHandler = async () => null
 
@@ -187,5 +197,51 @@ describe("class RouteMatcher", () => {
         const [routeOut3] = router.match("DELETE", "/path/ab/route/123")
         expect(routeOut1).toBeNull()
         expect(routeOut3).toBeNull()
+    })
+
+    test("[method] openapi: parameters schema inclusion", () => {
+        const dep = new Dependency({
+            parameters: {
+                path2: Path(z.string()),
+                query2: Query(z.string()),
+                header2: Header(z.string()),
+                Host: Header(z.string()), // default excluded
+                Origin: Header(z.string(), { includeInSchema: true }), // excluded, force include
+                query: Query(z.string()), // repeated
+            },
+            handle: nullHandler,
+        })
+        const route = new Route({
+            method: "GET",
+            path: "/path/to/{path}",
+            parameters: {
+                path: Path(z.string()),
+                query: Query(z.string()),
+                header: Header(z.string()),
+                Accept: Header(z.string()), // default excluded
+                Content_Length: Header(z.string()), // default excluded
+                Content_Type: Header(z.string()), // default excluded
+                Authorization: Header(z.string()), // default excluded
+                User_Agent: Header(z.string(), { includeInSchema: true }), // excluded, force include
+                body: Body(z.object({})),
+                dep: Depends(dep),
+            },
+            handle: nullHandler,
+        })
+        const openapi = route.openapi()
+        expect((openapi.request?.params as z.ZodObject<any>)?.shape.path).toBeTruthy()
+        expect((openapi.request?.params as z.ZodObject<any>)?.shape.path2).toBeTruthy()
+        expect((openapi.request?.query as z.ZodObject<any>)?.shape.query).toBeTruthy()
+        expect((openapi.request?.query as z.ZodObject<any>)?.shape.query2).toBeTruthy()
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape.header).toBeTruthy()
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape.header2).toBeTruthy()
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape.Accept).toBeFalsy()
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape["Content-Length"]).toBeFalsy()
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape["Content-Type"]).toBeFalsy()
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape.Authorization).toBeFalsy()
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape.Origin).toBeTruthy() // force included
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape.Host).toBeFalsy()
+        expect((openapi.request?.headers as z.ZodObject<any>)?.shape["User-Agent"]).toBeTruthy() // force included
+        expect(openapi.request?.body).toBeTruthy()
     })
 })

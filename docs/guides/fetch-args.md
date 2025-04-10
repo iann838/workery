@@ -42,7 +42,7 @@ Ensure that your `worker-configuration.d.ts` has up to date `Env` types.
 
 ## Dependency Env
 
-When declaring `Dependency`s, the recommended approach for typing `env` is a bit **different**, as this class holds additional generic types other than `E`, and TypeScript has [yet to support partial type inference](https://github.com/microsoft/TypeScript/issues/26242), providing the type for `env` can be troublesome.
+When defining `Dependency`s, the recommended approach for typing `env` is a bit **different**, as this class holds additional generic types other than `E`, and TypeScript has [yet to support partial type inference](https://github.com/microsoft/TypeScript/issues/26242), providing the type for `env` can be troublesome.
 
 A workaround and **more comfortable** way of providing the type for `env` is by passing it on the init parameter `of`:
 

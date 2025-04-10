@@ -8,6 +8,8 @@ import type {
     ContactObject,
     LicenseObject,
     OpenAPIObject,
+    SecurityRequirementObject,
+    SecuritySchemeObject,
     ServerObject,
     TagObject,
 } from "openapi3-ts/oas31"
@@ -25,10 +27,12 @@ export class App<E = unknown> extends Router<E> {
     description: string
     version: string
     tagsInfo: TagObject[]
-    servers?: ServerObject[]
+    servers: ServerObject[]
     contact?: ContactObject
     license?: LicenseObject
     termsOfService?: string
+    securitySchemes: Record<string, SecuritySchemeObject>
+    security: SecurityRequirementObject[]
     openapiUrl: string | null
     swaggerUrl: string | null
     redocUrl: string | null
@@ -47,6 +51,8 @@ export class App<E = unknown> extends Router<E> {
         contact?: ContactObject
         license?: LicenseObject
         termsOfService?: string
+        securitySchemes?: Record<string, SecuritySchemeObject>
+        security?: SecurityRequirementObject[]
         openapiUrl?: string | null
         swaggerUrl?: string | null
         redocUrl?: string | null
@@ -69,6 +75,12 @@ export class App<E = unknown> extends Router<E> {
         this.contact = init.contact
         this.license = init.license
         this.termsOfService = init.termsOfService
+        this.securitySchemes = init.securitySchemes ?? {}
+        this.security =
+            init.security ??
+            Object.keys(this.securitySchemes).map((key) => ({
+                [key]: [],
+            }))
         this.openapiUrl = init.openapiUrl === null ? null : (init.openapiUrl ?? "/openapi.json")
         this.swaggerUrl = init.swaggerUrl === null ? null : (init.swaggerUrl ?? "/docs")
         this.redocUrl = init.redocUrl === null ? null : (init.redocUrl ?? "/redoc")
@@ -137,6 +149,9 @@ export class App<E = unknown> extends Router<E> {
             servers: this.servers,
             tags: this.tagsInfo,
         })
+        this._openapi.components = this._openapi.components || {}
+        this._openapi.components.securitySchemes = this.securitySchemes
+        this._openapi.security = this.security
         return this._openapi
     }
 

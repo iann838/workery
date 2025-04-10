@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { extendZodWithOpenApi, ResponseConfig } from "@asteasolutions/zod-to-openapi"
-import type { Dependency } from "./dependencies"
+import { Dependency } from "./dependencies"
 import { isJsonCoercible, jsonCoerce } from "./helpers"
 import type {
     BodyParameter,
@@ -37,7 +37,6 @@ export function Path(
         location: "path",
         schema: schema,
         options: {
-            includeInSchema: true,
             preprocessor: isJsonCoercible(schema) ? jsonCoerce : undefined,
             ...options,
         },
@@ -57,7 +56,6 @@ export function Query(
         location: "query",
         schema: schema,
         options: {
-            includeInSchema: true,
             preprocessor: isJsonCoercible(schema) ? jsonCoerce : undefined,
             ...options,
         },
@@ -77,7 +75,6 @@ export function Header(
         location: "header",
         schema: schema,
         options: {
-            includeInSchema: true,
             preprocessor: isJsonCoercible(schema) ? jsonCoerce : undefined,
             ...options,
         },
@@ -97,7 +94,6 @@ export function Cookie(
         location: "cookie",
         schema: schema,
         options: {
-            includeInSchema: true,
             preprocessor: isJsonCoercible(schema) ? jsonCoerce : undefined,
             ...options,
         },
@@ -131,7 +127,6 @@ export function Body(
         schemaOr: schema instanceof z.ZodType ? undefined : schema,
         options: {
             mediaType: "application/json",
-            includeInSchema: true,
             ...options,
         },
     }
@@ -155,10 +150,12 @@ export async function parseArgs<Ps extends RouteParameters, E = unknown>(
             cookies?: Record<string, string | undefined>
         }
         later: Later
-    }
+    },
+    cache?: WeakMap<Dependency<any, any, any>, any>
 ): Promise<ParseArgsInfo<Ps, E>> {
     const { req } = input.baseArgs
     const { params, queries, cookies } = input.rawParameters ?? {}
+    cache = cache ?? new WeakMap()
 
     let success = true
     const args: Record<string, any> = {}
@@ -231,27 +228,33 @@ export async function parseArgs<Ps extends RouteParameters, E = unknown>(
         if (_parameter.location == "$depends") {
             const parameter = _parameter as DependsParameter<z.ZodType>
             const dependency = parameter.dependency
-            const dependencyParseInfo = await parseArgs(dependency.parameters, input)
+            if (dependency.useCache && cache.get(dependency) !== undefined) {
+                args[name] = cache.get(dependency)
+                continue
+            }
+            const dependencyParseInfo = await parseArgs(dependency.parameters, input, cache)
             success &&= dependencyParseInfo.success
-            if (dependencyParseInfo.success)
+            if (dependencyParseInfo.success) {
                 args[name] = await dependency.handle(
                     { ...input.baseArgs, ...dependencyParseInfo.args },
                     input.later
                 )
-            else errors.push(...dependencyParseInfo.errors)
-            continue
+                if (dependency.useCache) cache.set(dependency, args[name])
+            } else {
+                errors.push(...dependencyParseInfo.errors)
+            }
         } else {
             parseOut = await parsers[_parameter.location](name, _parameter)
-        }
-
-        success &&= parseOut.success
-        if (parseOut.success) args[name] = parseOut.data
-        else {
-            errors.push({
-                location: _parameter.location,
-                name: name,
-                issues: parseOut.error.issues,
-            })
+            success &&= parseOut.success
+            if (parseOut.success) {
+                args[name] = parseOut.data
+            } else {
+                errors.push({
+                    location: _parameter.location,
+                    name: name,
+                    issues: parseOut.error.issues,
+                })
+            }
         }
     }
     return { success, errors, args: args as ArgsOf<Ps, E> }

@@ -42,12 +42,49 @@ app.get("/items/{itemId}", {
 })
 ```
 
-:::warning Cookies in Swagger
-At the moment, sending cookies in Swagger is [not possible](https://swagger.io/docs/specification/v3_0/authentication/cookie-authentication/). Making request to the example above in the interactive docs, `yummy` will always return `undefined`.
+:::info Schema Exclusion for Browser Enforced Headers <Badge type="tip" text="^1.2" />
+Some headers are ignored, or not sent by the browser due to security or protocol enforcement. These headers under normal circumstances should be excluded from the OpenAPI parameters schema, **this does not affect route implementations**. By default, Workery sets `includeInSchema: false` to the following list of headers:
+```ts
+[
+    "accept-encoding",
+    "accept-language",
+    "accept",
+    "authorization",
+    "connection",
+    "content-length",
+    "content-type",
+    "cookie",
+    "host",
+    "if-modified-since",
+    "if-none-match",
+    "keep-alive",
+    "origin",
+    "proxy-authenticate",
+    "proxy-authorization",
+    "referer",
+    "set-cookie",
+    "transfer-encoding",
+    "upgrade",
+    "user-agent",
+    "cf-connecting-ip",
+    "cf-ipcountry",
+    "cf-ray",
+    "cf-visitor",
+    "x-forwarded-for",
+    "x-real-ip",
+    "cf-pseudo-ipv4",
+    "cf-connecting-ipv6",
+    "cdn-loop",
+    "cf-worker",
+]
+```
+You may force these headers into the OpenAPI schema by manually setting `includeInSchema: true`.
+
+Some of these headers may cause conflict in Swagger, as they are controlled by a different UI in Swagger (e.g. `Accept` is controlled by a dropdown menu in the response part of the UI), therefore, they are recommended to be excluded.
 :::
 
-:::warning Reserved headers in Swagger
-Sending reserved headers (e.g. `Authorization`, `Accept`) explicitly in Swagger will be ignored, as these headers are controlled by a different UI in Swagger (e.g. `Accept` is controlled by a dropdown menu in the response part of the UI), you must hide these headers by setting `includeInSchema: false` if they are defined as required for requests through Swagger to work.
+:::warning Cookies in Swagger
+At the moment, sending cookies in Swagger is [not possible](https://swagger.io/docs/specification/v3_0/authentication/cookie-authentication/). Making request to the example above in the interactive docs, `yummy` will always return `undefined`.
 :::
 
 ## Parameters Behavior

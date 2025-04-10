@@ -46,7 +46,7 @@ export interface RouteParameter<S extends z.ZodType> {
     schema?: S
     schemaOr?: any
     dependency?: Dependency<any, RouteParameters, any>
-    options: RouteParameterOptions & { includeInSchema: boolean }
+    options: RouteParameterOptions
 }
 
 export type PathParameter<S extends z.ZodType> = RouteParameter<S> & {

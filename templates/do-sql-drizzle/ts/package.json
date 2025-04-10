@@ -21,6 +21,6 @@
 	"dependencies": {
 		"drizzle-orm": "^0.39.3",
 		"drizzle-zod": "^0.5.1",
-		"workery": "^1.1.5"
+		"workery": "^1.2.0"
 	}
 }

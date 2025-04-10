@@ -16,6 +16,7 @@ This class is used for structuring [big applications](./bigger-apps.md) into mul
 | `deprecated?` | `boolean` | Set the deprecated status to all routes. | `false` |
 | `includeInSchema?` | `boolean` | Set to include or exclude all routes from the generated OpenAPI document. | `true` |
 | `responses?` | `Record`\<`number`, `ResponseConfig`\> | Additional [response schemas](./responses.md#openapi-schemas) to all routes, shown in the generated OpenAPI document. | `{ 422: ... }` |
+| `security?` | `SecurityRequirementObject[]` | Array of security authentication requirements applied to all routes | `undefined` |
 | `defaultResponseClass?` | [`ResponseClass`](/reference/modules/types.md#responseclass) | Default response class of all routes. | `JSONResponse` |
 | `middleware?` | [`Middleware`](/reference/classes/middleware.Middleware.md)\<`E`\>[] | List of middleware applied to this router, merged when included in higher level routers. | `[]` |
 
@@ -37,6 +38,8 @@ All `Router` init options plus:
 | `contact?` | `ContactObject` | Contact info of the application (OpenAPI) | `undefined` |
 | `license?` | `LicenseObject` | License info of the application (OpenAPI) | `undefined` |
 | `termsOfService?` | `string` | Terms of service info of the application (OpenAPI) | `undefined` |
+| `securitySchemes?` | `Record<string, SecuritySchemeObject>` | Mapping of security schemes and authentication (OpenAPI) | `undefined` |
+| `security?` | `SecurityRequirementObject[]` | Array of security authentication requirements applied to all routes | `[{ [key]: [] }]` per `keyof securitySchemes` |
 | `openapiUrl?` | ``null`` \| `string` | Route path URL for serving the OpenAPI JSON document. | `"/openapi.json"` |
 | `swaggerUrl?` | ``null`` \| `string` | Route path URL for serving the Swagger interactive documentation. | `"/docs"` |
 | `redocUrl?` | ``null`` \| `string` | Route path URL for serving the ReDoc alternative documentation. | `"/redoc"` |

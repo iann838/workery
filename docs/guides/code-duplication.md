@@ -1,6 +1,6 @@
 # Code Duplication
 
-If you notice that your code is starting to have repeated statements and declarations more than a few times, it is probably time to address them.
+If you notice that your code is starting to have repeated statements and definitions more than a few times, it is probably time to address them.
 
 This guide will use **repeated parameters** as the context of examples, because it's the most common place to have code duplication. However, these deduplication logics can be applied to other scenarios.
 
@@ -19,7 +19,7 @@ Let's imagine that there are 10 routes using these same parameters, and now we w
 
 ## Good Old Destructuring
 
-Simply declare them in an object and later destructure them.
+Simply define them in an object and later destructure them.
 
 ```ts
 const commons = {
@@ -68,7 +68,7 @@ app.get("/", {
 This only applies if you want to deduplicate parameters and nested dependencies.
 :::
 
-Declare a dependency packing those parameters and later inject it to routes.
+Define a dependency packing those parameters and later inject it to routes.
 
 ```ts
 const commons = new Dependency({

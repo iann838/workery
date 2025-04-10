@@ -19,15 +19,17 @@ export default {
             },
             {
                 text: "Reference",
-                link: "/reference/modules/",
+                link: "/reference/index.md",
                 activeMatch: "/reference/*"
             },
             {
-                text: "1.1.5 (latest)",
-                items: [
-                    { text: "Releases", link: "https://github.com/iann838/workery/releases" },
-                    { text: "Migrations", link: "/migrations/1_0-1_1.md" }
-                ]
+                text: "Migrate -> 1.2",
+                link: "/migrations/1_1-1_2.md",
+                activeMatch: "/migrations/*"
+            },
+            {
+                text: "Releases",
+                link: "https://github.com/iann838/workery/releases"
             },
             {
                 text: "Star ⭐",
@@ -96,6 +98,10 @@ export default {
                                 link: '/guides/cors.md'
                             },
                             {
+                                text: "Authentication",
+                                link: '/guides/authentication.md'
+                            },
+                            {
                                 text: "Compression",
                                 link: '/guides/compression.md'
                             },
@@ -126,16 +132,16 @@ export default {
                         text: "Reference",
                         collapsed: false,
                         items: [
-                            { text: "index", link: "/reference/modules/" },
-                            { text: "applications", link: "/reference/modules/applications.md" },
-                            { text: "dependencies", link: "/reference/modules/dependencies.md" },
-                            { text: "helpers", link: "/reference/modules/helpers.md" },
-                            { text: "middleware", link: "/reference/modules/middleware.md" },
-                            { text: "parameters", link: "/reference/modules/parameters.md" },
-                            { text: "renderers", link: "/reference/modules/renderers.md" },
-                            { text: "responses", link: "/reference/modules/responses.md" },
-                            { text: "routing", link: "/reference/modules/routing.md" },
-                            { text: "types", link: "/reference/modules/types.md" },
+                            { text: "index", link: "/reference/index.md" },
+                            { text: "applications", link: "/reference/applications/index.md" },
+                            { text: "dependencies", link: "/reference/dependencies/index.md" },
+                            { text: "helpers", link: "/reference/helpers/index.md" },
+                            { text: "middleware", link: "/reference/middleware/index.md" },
+                            { text: "parameters", link: "/reference/parameters/index.md" },
+                            { text: "renderers", link: "/reference/renderers/index.md" },
+                            { text: "responses", link: "/reference/responses/index.md" },
+                            { text: "routing", link: "/reference/routing/index.md" },
+                            { text: "types", link: "/reference/types/index.md" },
                         ]
                     }
                 ]
@@ -145,7 +151,8 @@ export default {
                     {
                         text: "Migrations",
                         items: [
-                            { text: "1.0 -> 1.1", link: "/migrations/1_0-1_1.md" }
+                            { text: "1.1 -> 1.2", link: "/migrations/1_1-1_2.md" },
+                            { text: "1.0 -> 1.1", link: "/migrations/1_0-1_1.md" },
                         ]
                     }
                 ]

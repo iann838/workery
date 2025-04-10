@@ -1,8 +1,8 @@
 # Dependencies
 
-**Dependency Injection** means, in programming, that there is a way for your code (in this case, your route handlers) to declare things that it requires to work and use: "dependencies".
+**Dependency Injection** means, in programming, that there is a way for your code (in this case, your route handlers) to define things that it requires to work and use: "dependencies".
 
-And then, that system (in this case **Workery**) will take care of doing what is needed to provide your code with those declared dependencies ("inject" the dependencies).
+And then, that system (in this case **Workery**) will take care of doing what is needed to provide your code with those defined dependencies ("inject" the dependencies).
 
 This is very useful when you need to:
 
@@ -12,7 +12,7 @@ This is very useful when you need to:
 - And many other things...
 - All these, while minimizing code repetition.
 
-## Declaration
+## Definition
 
 To create a dependency you use the `Dependency` class to create a dependency instance.
 
@@ -20,6 +20,7 @@ The dependency init receives:
 
 - `of`: (optional) instance from which to inherit the `env` type (see [Dependency Env](./fetch-args.md#dependency-env)).
 - `name`: (optional) name of the middleware, this does not have any functional effect.
+- `useCache` <Badge type="tip" text="^1.2" />: (optional) allow dependency handler responses to be cached and reused during parameter resolution on requests (details below). Default: `true`  
 - `parameters`: the usual parameters declaration, these parameters will also be part of the generated OpenAPI document for the routes that uses this dependency.
 - `handle`: the usual handler function, but with a **second optional positional argument**:
     - `later`: after-request hook, void function receiving a response, [see details below](#after-request-hook).
@@ -118,3 +119,21 @@ const requireAuth = new Dependency({
     },
 })
 ```
+
+## Dependency Caching <Badge type="tip" text="^1.2" />
+
+Dependencies are smart, if you define a route that declares two dependencies that are identical (the same `Dependency` object), by default, the return value of them are cached and reused during parameter resolution, for example:
+
+```ts
+app.get("/", {
+    parameters: {
+		user: Depends(requireAuth),
+        role: Depends(requireAuthedRole), // also uses requireAuth
+	},
+    handle: ({ user, role }) => {
+        // ...
+    },
+})
+```
+
+The dependency handler `requireAuth` will only be executed **once** during parameter resolution of the request. To disable this behavior, set `useCache: false` on dependency definition.

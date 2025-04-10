@@ -20,9 +20,9 @@ Let's say you have a file structure like this:
 - Inside the subdirectory there are 2 files: `items` and `users`
 - Each file consist of a sub-application (or router) with its own routes. 
 
-## Router Declaration
+## Router Definition
 
-Router declaration is almost the same as declaring an App, with the only exception that OpenAPI options and middleware are not available.
+Router definition is almost the same as defining an App, with the only exception that OpenAPI options and middleware are not available.
 
 ::: code-group
 ```ts [src/routers/items.ts]

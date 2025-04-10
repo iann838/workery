@@ -9,6 +9,7 @@ import { Body, Cookie, Depends, Header, Path, Query, Responds } from "../src/par
 import { JSONResponse, PlainTextResponse } from "../src/responses"
 
 // 2 Sample Apps
+
 const app = new App<undefined>({
     middleware: [
         CompressMiddleware("gzip"),
@@ -268,6 +269,55 @@ subAppMMerge.get("/3", {
 appMMerge.include("/2", subAppMMerge)
 appMMerge.include("/23", subAppMMerge2)
 
+// Dependency Caching
+
+let depCacheCounter = 0
+let depCacheCounter2 = 0
+let depNoCacheCounter = 0
+const cacheTestDep = new Dependency({
+    parameters: {},
+    handle: () => ++depCacheCounter
+})
+const cacheTestDep2 = new Dependency({
+    parameters: {
+        counter: Depends(cacheTestDep)
+    },
+    handle: () => ++depCacheCounter2
+})
+const noCacheTestDep = new Dependency({
+    useCache: false,
+    parameters: {
+        counter: Depends(cacheTestDep)
+    },
+    handle: () => ++depNoCacheCounter
+})
+
+const appDepCache = new App<undefined>({})
+
+appDepCache.get("/cache-counter", {
+    parameters: {
+        counter: Depends(cacheTestDep),
+        counter2: Depends(cacheTestDep),
+    },
+    handle: ({ counter, counter2 }) => { return { counter, counter2 }}
+})
+
+appDepCache.get("/cache-counter-deep", {
+    parameters: {
+        counter3: Depends(cacheTestDep2),
+        counter: Depends(cacheTestDep),
+    },
+    handle: ({ counter, counter3 }) => { return { counter, counter3 }}
+})
+
+appDepCache.get("/cache-counter-no-cache", {
+    parameters: {
+        counter: Depends(noCacheTestDep),
+        counter2: Depends(noCacheTestDep),
+    },
+    handle: ({ counter, counter2 }) => { return { counter, counter2 }}
+})
+
 // Tests
 
 describe("class App", () => {
@@ -485,6 +535,26 @@ describe("class App", () => {
         expect(Object.entries(openapi.paths!).length).toBeTruthy()
     })
 
+    test("[method] openapi: auto security requirement", () => {
+        const tempApp = new App<undefined>({
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer"
+                }
+            }
+        })
+        const openapi = tempApp.openapi()
+        expect(openapi).toBeTruthy()
+        expect(openapi.components!.securitySchemes).toEqual({
+            bearerAuth: {
+                type: "http",
+                scheme: "bearer"
+            }
+        })
+        expect(openapi.security).toEqual([{ bearerAuth: [] }])
+    })
+
     test("[method] handle: include success", async () => {
         const res1 = await app.handle({ req: new Request("http://a.co/subpath/hello-world"), ...cfargs })
         expect(res1).toBeTruthy()
@@ -649,6 +719,62 @@ describe("class App", () => {
         expect(res2).toBeTruthy()
         expect(res2.headers.get("X-M")).toBe("21")
         expect(res2.status).toBe(404)
+    })
+
+    test("[method] handle: dependency caching simple", async () => {
+        depCacheCounter = 0
+
+        const res2 = await appDepCache.handle({
+            req: new Request("http://d.co/cache-counter", { method: "GET" }),
+            ...cfargs,
+        })
+        expect(res2).toBeTruthy()
+        expect(res2.status).toBe(200)
+        expect(await res2.json()).toEqual({ counter: 1, counter2: 1})
+
+        // ensure it runs again
+        const res3 = await appDepCache.handle({
+            req: new Request("http://d.co/cache-counter", { method: "GET" }),
+            ...cfargs,
+        })
+        expect(res3).toBeTruthy()
+        expect(res3.status).toBe(200)
+        expect(await res3.json()).toEqual({ counter: 2, counter2: 2})
+    })
+
+    test("[method] handle: dependency caching nested", async () => {
+        depCacheCounter = 0
+        depCacheCounter2 = 0
+
+        const res2 = await appDepCache.handle({
+            req: new Request("http://d.co/cache-counter-deep", { method: "GET" }),
+            ...cfargs,
+        })
+        expect(res2).toBeTruthy()
+        expect(res2.status).toBe(200)
+        expect(await res2.json()).toEqual({ counter: 1, counter3: 1})
+
+        const res3 = await appDepCache.handle({
+            req: new Request("http://d.co/cache-counter-deep", { method: "GET" }),
+            ...cfargs,
+        })
+        expect(res3).toBeTruthy()
+        expect(res3.status).toBe(200)
+        expect(await res3.json()).toEqual({ counter: 2, counter3: 2})
+    })
+
+    test("[method] handle: dependency caching disabled", async () => {
+        depNoCacheCounter = 0
+
+        const res2 = await appDepCache.handle({
+            req: new Request("http://d.co/cache-counter-no-cache", { method: "GET" }),
+            ...cfargs,
+        })
+        expect(res2).toBeTruthy()
+        expect(res2.status).toBe(200)
+        const { counter, counter2 } = await res2.json()
+        expect(counter + counter2).toEqual(3)
+
     })
 
 })

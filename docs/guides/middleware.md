@@ -11,7 +11,7 @@ A "middleware" is a function that works with every **request** before it is proc
 - It can do something to that **response** or run any needed code.
 - Then it returns the **response**.
 
-## Declaration
+## Definition
 
 To create a middleware you use the `Middleware` class to create a middleware instance.
 

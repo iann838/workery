@@ -17,6 +17,7 @@ export default {
     plugin: ["typedoc-plugin-markdown"],
     githubPages: false,
     readme: "none",
+    entryFileName: "index",
     excludePrivate: true,
     sort: "source-order"
 }
