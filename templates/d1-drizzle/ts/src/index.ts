@@ -17,7 +17,7 @@ import { JSONResponse } from "workery/responses"
 import z from "zod"
 
 import { useDb } from "./dependencies"
-import { Item } from "./zodtypes"
+import { ItemInsert } from "./zodtypes"
 
 const app = new App<Env>({})
 
@@ -42,7 +42,7 @@ app.get("/items", {
 app.post("/items", {
     parameters: {
         db: Depends(useDb),
-        item: Body(Item.omit({ id: true, updatedAt: true })),
+        item: Body(ItemInsert),
     },
     handle: async ({ db, item }) => {
         const result = await db.createItem(item)
@@ -56,7 +56,7 @@ app.patch("/items/{id}", {
     parameters: {
         db: Depends(useDb),
         id: Path(z.number()),
-        itemPt: Body(Item.omit({ id: true, updatedAt: true }).partial())
+        itemPt: Body(ItemInsert.partial())
     },
     handle: async ({ db, id, itemPt }) => {
         const result = await db.updateItem(id, itemPt)

@@ -123,6 +123,7 @@ export class App<E = unknown> extends Router<E> {
             const includeRoute = new Route({
                 ...route,
                 path: pathPrefix + route.path,
+                security: route.security ?? this.security,
             })
             this.routeMatcher.push(includeRoute)
             this.routeMatcher.set(pathPrefix, { middleware: router.middleware })
@@ -151,7 +152,6 @@ export class App<E = unknown> extends Router<E> {
         })
         this._openapi.components = this._openapi.components || {}
         this._openapi.components.securitySchemes = this.securitySchemes
-        this._openapi.security = this.security
         return this._openapi
     }
 

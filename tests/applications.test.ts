@@ -544,6 +544,17 @@ describe("class App", () => {
                 }
             }
         })
+        const tempAppSub = new Router<undefined>({
+            security: []
+        })
+        const tempAppSub2 = new Router<undefined>({})
+        let scopedRoute = { ...todoRoute }
+        delete scopedRoute.security
+        tempApp.get("/todo", scopedRoute)
+        tempAppSub.get("/todo", scopedRoute)
+        tempAppSub2.get("/todo", scopedRoute)
+        tempApp.include("/sub", tempAppSub)
+        tempApp.include("/sub2", tempAppSub2)
         const openapi = tempApp.openapi()
         expect(openapi).toBeTruthy()
         expect(openapi.components!.securitySchemes).toEqual({
@@ -552,7 +563,12 @@ describe("class App", () => {
                 scheme: "bearer"
             }
         })
-        expect(openapi.security).toEqual([{ bearerAuth: [] }])
+        for (const route of tempApp.routeMatcher.routes) {
+            if (route.path.startsWith("/sub/"))
+                expect(route.openapi().security).toEqual([])
+            else
+                expect(route.openapi().security).toEqual([{ bearerAuth: [] }])
+        }
     })
 
     test("[method] handle: include success", async () => {

@@ -18,7 +18,7 @@ import z from "zod"
 
 import { useClientDb } from "./dependencies"
 import { ClientDatabase } from "./databases"
-import { Item } from "./zodtypes"
+import { ItemInsert } from "./zodtypes"
 
 const app = new App<Env>({})
 
@@ -43,7 +43,7 @@ app.get("/items", {
 app.post("/items", {
     parameters: {
         db: Depends(useClientDb),
-        item: Body(Item.omit({ id: true, updatedAt: true })),
+        item: Body(ItemInsert),
     },
     handle: async ({ db, item }) => {
         const result = await db.createItem(item)
@@ -57,7 +57,7 @@ app.patch("/items/{id}", {
     parameters: {
         db: Depends(useClientDb),
         id: Path(z.number()),
-        itemPt: Body(Item.omit({ id: true, updatedAt: true }).partial())
+        itemPt: Body(ItemInsert.partial())
     },
     handle: async ({ db, id, itemPt }) => {
         const result = await db.updateItem(id, itemPt)

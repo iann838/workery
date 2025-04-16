@@ -17,17 +17,17 @@ npm run deploy
 ```
 ```sh [yarn]
 # Start dev server:
-yarn dev
+yarn run dev
 
 # Deploy application:
-yarn deploy
+yarn run deploy
 ```
 ```sh [pnpm]
 # Start dev server:
-pnpm dev
+pnpm run dev
 
 # Deploy application:
-pnpm deploy
+pnpm run deploy
 ```
 :::
 

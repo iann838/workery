@@ -36,35 +36,35 @@ npm run migrations:apply --remote
 ```
 ```sh [yarn]
 # Start dev server:
-yarn dev
+yarn run dev
 
 # Deploy application:
-yarn deploy
+yarn run deploy
 
 # Detect and generate migrations
-yarn migrations:generate
+yarn run migrations:generate
 
 # Apply migrations to local database
-yarn migrations:apply
+yarn run migrations:apply
 
 # Apply migrations to deployed database
-yarn migrations:apply --remote
+yarn run migrations:apply --remote
 ```
 ```sh [pnpm]
 # Start dev server:
-pnpm dev
+pnpm run dev
 
 # Deploy application:
-pnpm deploy
+pnpm run deploy
 
 # Detect and generate migrations
-pnpm migrations:generate
+pnpm run migrations:generate
 
 # Apply migrations to local database
-pnpm migrations:apply
+pnpm run migrations:apply
 
 # Apply migrations to deployed database
-pnpm migrations:apply --remote
+pnpm run migrations:apply --remote
 ```
 :::
 

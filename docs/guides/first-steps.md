@@ -39,10 +39,10 @@ Run local development server:
 npm run dev
 ```
 ```sh [yarn]
-yarn dev
+yarn run dev
 ```
 ```sh [pnpm]
-pnpm dev
+pnpm run dev
 ```
 :::
 
@@ -101,10 +101,10 @@ Deploy your app to Cloudflare Workers:
 npm run deploy
 ```
 ```sh [yarn]
-yarn deploy
+yarn run deploy
 ```
 ```sh [pnpm]
-pnpm deploy
+pnpm run deploy
 ```
 :::
 

@@ -11,5 +11,7 @@ import { items } from "./schema"
 export const Item = createSelectSchema(items, {
     name: (schema) => schema.name.min(1),
 })
+export const ItemInsert = Item.omit({ id: true, updatedAt: true })
 
 export type ItemType = z.infer<typeof Item>
+export type ItemInsertType = z.infer<typeof ItemInsert>
